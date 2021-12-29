@@ -5,9 +5,9 @@ namespace DicomViewer.Entities.Dtos.Request
     public class SignInRequestDto
     {
         [Required]
-        public string Email { get; }
+        public string Email { get; set; }
 
         [Required]
-        public string Password { get; }   
+        public string Password { get; set; }   
     }
 }
