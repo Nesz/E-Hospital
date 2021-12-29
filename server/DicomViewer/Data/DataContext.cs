@@ -15,5 +15,6 @@ namespace DicomViewer.Data
         }
         
         public DbSet<DicomMeta> DicomMetas { get; set; }
+        public DbSet<User> Users { get; set; }
     }
 }

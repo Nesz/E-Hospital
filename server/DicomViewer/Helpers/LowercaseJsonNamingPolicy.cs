@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace DicomViewer
+namespace DicomViewer.Helpers
 {
     public class LowercaseJsonNamingPolicy: JsonNamingPolicy
     {

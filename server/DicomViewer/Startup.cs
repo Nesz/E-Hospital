@@ -1,12 +1,20 @@
+using System.Text;
+using AutoMapper;
 using DicomViewer.Data;
+using DicomViewer.Helpers;
+using DicomViewer.Middleware;
 using DicomViewer.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 namespace DicomViewer
@@ -26,12 +34,38 @@ namespace DicomViewer
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<DataContext>(opt =>
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Secret"]));
+            var mapperConfig = new MapperConfiguration(mc => mc.AddProfile(new MappingProfile()));
+
+            services
+                .AddHttpContextAccessor()
+                .AddSingleton(mapperConfig.CreateMapper())
+                .AddScoped<IUserAccessor, UserAccessor>()
+                .AddScoped<IDicomService, DicomService>()
+                .AddScoped<IUserService, UserService>()
+                .AddDbContext<DataContext>(opt =>
                 {
                     opt.UseLoggerFactory(factory);
                     opt.UseNpgsql(Configuration.GetConnectionString("DBConnection"));
                 })
-                .AddScoped<DicomService>();
+                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(opt =>
+                {
+                    opt.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = key,
+                        ValidateAudience = false,
+                        ValidateIssuer = false,
+                        ValidateLifetime = true
+                    };
+                });
+            
+            services.AddControllers(opt =>
+            {
+                var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+                opt.Filters.Add(new AuthorizeFilter(policy));
+            });
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -64,6 +98,7 @@ namespace DicomViewer
             app.UseCors("MyAllowSpecificOrigins");
 
 
+            app.UseMiddleware<ErrorHandlingMiddleware>();
             app.UseHttpsRedirection();
 
             app.UseRouting();
