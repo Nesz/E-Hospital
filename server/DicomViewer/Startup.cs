@@ -2,10 +2,13 @@ using System.Text;
 using AutoMapper;
 using DicomViewer.Data;
 using DicomViewer.Helpers;
+using DicomViewer.Middleware;
 using DicomViewer.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,6 +60,12 @@ namespace DicomViewer
                         ValidateLifetime = true
                     };
                 });
+            
+            services.AddControllers(opt =>
+            {
+                var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+                opt.Filters.Add(new AuthorizeFilter(policy));
+            });
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -89,6 +98,7 @@ namespace DicomViewer
             app.UseCors("MyAllowSpecificOrigins");
 
 
+            app.UseMiddleware<ErrorHandlingMiddleware>();
             app.UseHttpsRedirection();
 
             app.UseRouting();

@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using DicomViewer.Dtos;
 using DicomViewer.Entities;
 using DicomViewer.Entities.Dtos.Request;
 using DicomViewer.Entities.Dtos.Response;
@@ -16,5 +17,7 @@ namespace DicomViewer.Services
         public Task<SignUpResponseDto> SignUp(SignUpRequestDto request);
 
         public Task<SignInResponseDto> SignIn(SignInRequestDto request);
+        
+        public Task<UserDto> GetCurrentUser();
     }
 }

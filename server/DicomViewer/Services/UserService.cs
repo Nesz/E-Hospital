@@ -23,12 +23,18 @@ namespace DicomViewer.Services
     {
         private readonly IMapper _mapper;
         private readonly DataContext _dataContext;
+        private readonly IUserAccessor _userAccessor;
         private readonly IConfiguration _configuration;
 
-        public UserService(DataContext dataContext, IConfiguration configuration, IMapper mapper)
-        {
+        public UserService(
+            DataContext dataContext, 
+            IUserAccessor userAccessor, 
+            IConfiguration configuration, 
+            IMapper mapper
+        ) {
             _mapper = mapper;
             _dataContext = dataContext;
+            _userAccessor = userAccessor;
             _configuration = configuration;
         }
         
@@ -64,7 +70,13 @@ namespace DicomViewer.Services
 
             return user != null;
         }
-        
+
+        public async Task<UserDto> GetCurrentUser()
+        {
+            var user = await GetById(_userAccessor.GetUserId());
+            return _mapper.Map<UserDto>(user);
+        }
+
         public async Task<SignUpResponseDto> SignUp(SignUpRequestDto request)
         {
             var alreadyExists = await ExistsByEmail(request.Email);
