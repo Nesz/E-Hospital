@@ -8,6 +8,7 @@ using DicomParser;
 using DicomViewer.Data;
 using DicomViewer.Dtos;
 using DicomViewer.Entities;
+using DicomViewer.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Bson;
@@ -16,7 +17,7 @@ using MongoDB.Driver.GridFS;
 
 namespace DicomViewer.Services
 {
-    public class DicomService
+    public class DicomService : IDicomService
     {
 
         private readonly DataContext _dataContext;
@@ -53,7 +54,7 @@ namespace DicomViewer.Services
             return await GetFrameStream(new ObjectId(dicom.MongoId));
         }
 
-        private async Task SaveDicom(Dicom dicom, string filename)
+        public async Task SaveDicom(Dicom dicom, string filename)
         {
             var frame = dicom.Entries[DicomConstats.PixelData].GetAsListBytes()[0];
             dicom.Entries.Remove(DicomConstats.PixelData);
@@ -82,14 +83,14 @@ namespace DicomViewer.Services
             await _dataContext.SaveChangesAsync();
         }
 
-        private async Task<dynamic> GetMetadata(ObjectId id)
+        public async Task<dynamic> GetMetadata(ObjectId id)
         {
             var filter = Builders<GridFSFileInfo>.Filter.Eq("_id", id);
             var results = await _fileGrid.FindAsync(filter);
             return results.First().Metadata.ToDictionary();
         }
         
-        private async Task<Stream> GetFrameStream(ObjectId id)
+        public async Task<Stream> GetFrameStream(ObjectId id)
         {
             return await _fileGrid.OpenDownloadStreamAsync(id);
         }

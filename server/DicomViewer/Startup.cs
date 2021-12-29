@@ -1,4 +1,6 @@
+using AutoMapper;
 using DicomViewer.Data;
+using DicomViewer.Helpers;
 using DicomViewer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -26,12 +28,17 @@ namespace DicomViewer
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<DataContext>(opt =>
+            var mapperConfig = new MapperConfiguration(mc => mc.AddProfile(new MappingProfile()));
+
+            services
+                .AddSingleton(mapperConfig.CreateMapper())
+                .AddScoped<IUserAccessor, UserAccessor>()
+                .AddScoped<IDicomService, DicomService>()
+                .AddDbContext<DataContext>(opt =>
                 {
                     opt.UseLoggerFactory(factory);
                     opt.UseNpgsql(Configuration.GetConnectionString("DBConnection"));
-                })
-                .AddScoped<DicomService>();
+                });
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
