@@ -5,11 +5,14 @@ using System.Net;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using DicomViewer.Data;
+using DicomViewer.Dtos;
 using DicomViewer.Entities;
 using DicomViewer.Entities.Dtos.Request;
 using DicomViewer.Entities.Dtos.Response;
 using DicomViewer.Exceptions;
+using DicomViewer.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -18,11 +21,13 @@ namespace DicomViewer.Services
 {
     public class UserService
     {
+        private readonly IMapper _mapper;
         private readonly DataContext _dataContext;
         private readonly IConfiguration _configuration;
 
-        public UserService(DataContext dataContext, IConfiguration configuration)
+        public UserService(DataContext dataContext, IConfiguration configuration, IMapper mapper)
         {
+            _mapper = mapper;
             _dataContext = dataContext;
             _configuration = configuration;
         }
@@ -73,11 +78,12 @@ namespace DicomViewer.Services
                 PasswordHash = hashedPassword
             };
 
-            newUser = (await _dataContext.Users.AddAsync(newUser)).Entity;
+            await _dataContext.Users.AddAsync(newUser);
+            await _dataContext.SaveChangesAsync();
 
             return new SignUpResponseDto
             {
-                User = newUser,
+                User = _mapper.Map<UserDto>(newUser),
                 Token = GenerateJwtToken(newUser)
             };
         }
@@ -93,7 +99,7 @@ namespace DicomViewer.Services
 
             return new SignInResponseDto 
             {
-                User = user,
+                User = _mapper.Map<UserDto>(user),
                 Token = GenerateJwtToken(user)
             };
         }

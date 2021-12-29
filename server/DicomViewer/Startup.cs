@@ -39,6 +39,7 @@ namespace DicomViewer
                 .AddSingleton(mapperConfig.CreateMapper())
                 .AddScoped<IUserAccessor, UserAccessor>()
                 .AddScoped<IDicomService, DicomService>()
+                .AddScoped<UserService>()
                 .AddDbContext<DataContext>(opt =>
                 {
                     opt.UseLoggerFactory(factory);

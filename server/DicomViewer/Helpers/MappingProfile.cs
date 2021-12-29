@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using DicomViewer.Dtos;
+using DicomViewer.Entities;
 
 namespace DicomViewer.Helpers
 {
@@ -6,7 +8,7 @@ namespace DicomViewer.Helpers
     {
         public MappingProfile()
         {
-            
+            CreateMap<User, UserDto>();
         }
     }
 }
