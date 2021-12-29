@@ -12,9 +12,9 @@ namespace DicomViewer.Controllers
     public class AuthenticationController : ControllerBase
     {
         
-        private readonly UserService _userService;
+        private readonly IUserService _userService;
 
-        public AuthenticationController(UserService userService)
+        public AuthenticationController(IUserService userService)
         {
             _userService = userService;
         }
