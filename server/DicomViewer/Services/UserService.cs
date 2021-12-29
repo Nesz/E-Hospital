@@ -19,7 +19,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace DicomViewer.Services
 {
-    public class UserService
+    public class UserService : IUserService
     {
         private readonly IMapper _mapper;
         private readonly DataContext _dataContext;
