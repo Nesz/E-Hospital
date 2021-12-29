@@ -1,0 +1,84 @@
+<div class="tools--extra">
+  <span class="tools--extra__first"></span>
+
+  <span class="dropdown--wrapper" *ngIf="tool?.extraOptions?.type === 'dropdown'">
+    <span class="tools--extra--label">{{ tool?.extraOptions.name }}</span>
+    <select (change)="onOptionChange($event)" class="tools--extra--dropdown" name="NAME">
+      <option *ngFor="let choice of tool?.extraOptions?.choices; let i = index" value="{{ i }}">
+        {{ choice.display }}
+      </option>
+    </select>
+  </span>
+
+  <div
+    [class.tools--measurements--hidden]="!this.sidebarActive"
+    (click)="this.sidebarActive = !this.sidebarActive"
+    class="tools--measurements--hide-icon"
+  >
+    <img src="assets/hide.svg" />
+  </div>
+</div>
+
+<div class="flex">
+  <div class="tools--list">
+    <span
+      [class.tools--list--entry--active]="tool === tol"
+      class="tools--list--entry"
+      (click)="changeTool(tol)"
+      *ngFor="let tol of tools"
+    >
+      <img class="tools--list--entry__icon" src="{{ tol.toolIcon }}" alt="" />
+      <span class="tools--list--entry__tooltip">{{ tol.toolName }}</span>
+    </span>
+
+    <div class="tools--list--entry tools--list--entry__reset" (click)="reset()">
+      <img class="tools--list--entry__icon" src="assets/eraser.svg" alt="" />
+      <span class="tools--list--entry__tooltip">Reset</span>
+    </div>
+  </div>
+
+  <div #parent class="editor--wrapper">
+    <canvas #canvas class="editor"> </canvas>
+  </div>
+
+  <div class="slider--wrapper">
+    <div class="slider">
+      <div class="slider--indicator">
+        <input
+          (input)="frameChanged($event)"
+          type="range"
+          id="frame"
+          name="frame"
+          value="0"
+          min="0"
+          max="{{ this.frames.length - 1 }}"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!--<div class="tools--measurements--wrapper">-->
+  <div [class.tools--measurements__hidden]="!sidebarActive" class="tools--measurements">
+    <div class="tools--measurements--header">Measurements</div>
+    <div
+      class="measurement"
+      [class.measurement--active]="shape.isActive"
+      (click)="onMeasurementClick(shape)"
+      *ngFor="let shape of shapes; let i = index"
+    >
+      <span class="measurement--index">{{ i + 1 }}</span>
+      <div class="measurement--details">
+        <input
+          class="measurement--label"
+          (change)="onLabelChange($event, shape)"
+          value="{{ shape.label }}"
+        />
+        <!--<div class="measurement--label">{{ shape.label }}</div>-->
+        <div class="measurement--distance--wrapper">
+          <div class="measurement--distance">area: {{ humanizeArea(shape.w, shape.h) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--</div>-->
+</div>

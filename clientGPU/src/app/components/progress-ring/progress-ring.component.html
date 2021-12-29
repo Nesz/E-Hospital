@@ -1,0 +1,27 @@
+<div class="progress-ring">
+  <span class="progress-ring__percentage">{{ progress }}</span>
+  <span class="progress-ring__label">{{ label }}</span>
+  <svg [attr.width]="radius * 2" [attr.height]="radius * 2">
+    <circle
+      class="progress-ring__outline"
+      fill="transparent"
+      [attr.stroke-width]="2"
+      [attr.stroke-dasharray]="circumference + ' ' + circumference"
+      [style.stroke-dashoffset]="0"
+      [attr.r]="normalizedRadius"
+      [attr.cx]="radius"
+      [attr.cy]="radius"
+    />
+    <circle
+      #animated
+      class="progress-ring__actual"
+      fill="transparent"
+      [attr.stroke-width]="6"
+      [attr.stroke-dasharray]="circumference + ' ' + circumference"
+      [style.stroke-dashoffset]="strokeDashoffset"
+      [attr.r]="normalizedRadius"
+      [attr.cx]="radius"
+      [attr.cy]="radius"
+    />
+  </svg>
+</div>

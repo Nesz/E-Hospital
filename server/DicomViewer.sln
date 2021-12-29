@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DicomViewer", "DicomViewer\DicomViewer.csproj", "{F76E55C8-13A9-43C4-82F9-81DDEA41FB3A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DicomParser", "DicomParser\DicomParser\DicomParser.csproj", "{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F76E55C8-13A9-43C4-82F9-81DDEA41FB3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F76E55C8-13A9-43C4-82F9-81DDEA41FB3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F76E55C8-13A9-43C4-82F9-81DDEA41FB3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F76E55C8-13A9-43C4-82F9-81DDEA41FB3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

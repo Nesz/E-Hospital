@@ -1,0 +1,29 @@
+<div class="canvas-part">
+  <div class="canvas-part--header__wrapper">
+    <div class="canvas-part--header">
+      <select
+        class="canvas-part--header__axis"
+
+        [value]="canvasPart.orientation"
+        (change)="changeAxis($event)"
+      >
+        <option value="x">Sagittal (x axis)</option>
+        <option value="y">Coronal (y axis)</option>
+        <option value="z">Transverse (z axis)</option>
+      </select>
+    </div>
+  </div>
+  <div #canvas id="draw-area" class="canvas-part__draw-area"></div>
+  <div class="canvas-part--slider">
+    <div class="canvas-part--slider__holder">
+      <input
+        type="range"
+        name="frame"
+        min="0"
+        max="{{ slices.slices.length - 1 }}"
+        [value]="canvasPart.currentSlice"
+        (input)="changeSlice($event)"
+      />
+    </div>
+  </div>
+</div>

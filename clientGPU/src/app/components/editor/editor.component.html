@@ -1,0 +1,95 @@
+<!--<div class="tools--extra">
+  <span class="tools--extra__first"></span>
+
+  <div class="cine">
+    <div class="cine--icon--wrapper" (click)="toggleAnimation()">
+      <img class="cine--icon" *ngIf="!isAnimating; else paused" src="assets/play.svg" />
+      <ng-template #paused>
+        <img class="cine--icon" src="assets/pause.svg" />
+      </ng-template>
+    </div>
+    <input (input)="fpsChanged($event)" type="range" [value]="fps" min="1" max="140" />
+    <span>{{ fps }}fps</span>
+  </div>
+
+  <div
+    [class.tools--measurements--hidden]="!this.sidebarActive"
+    (click)="this.sidebarActive = !this.sidebarActive"
+    class="tools--measurements--hide-icon"
+  >
+    <img src="assets/hide.svg" />
+  </div>
+</div>-->
+
+<div class="flex">
+  <div class="tools--list">
+    <span
+      [class.tools--list--entry--active]="tool === tol"
+      class="tools--list--entry"
+      (click)="changeTool(tol)"
+      *ngFor="let tol of tools"
+    >
+      <img class="tools--list--entry__icon" src="{{ tol.toolIcon }}" alt="" />
+      <span class="tools--list--entry__tooltip">{{ tol.toolName }}</span>
+    </span>
+
+    <span class="tools--list--entry" (click)="enabled = !enabled">
+      <img class="tools--list--entry__icon" src="assets/grid.svg" alt="" />
+      <span class="tools--list--entry__tooltip">Grid</span>
+      <span class="grid-selector" *ngIf="enabled">
+        <div
+          *ngFor="let z of [].constructor(3); let i = index"
+          [class.grid-selector-element-active]="currentHover >= i"
+          (mouseover)="hover(i)"
+          (mouseout)="hover(-1)"
+          (click)="grid(i + 1)"
+          class="grid-selector-element"
+        ></div>
+      </span>
+    </span>
+
+    <div class="tools--list--entry tools--list--entry__reset" (click)="reset()">
+      <img class="tools--list--entry__icon" src="assets/eraser.svg" alt="" />
+      <span class="tools--list--entry__tooltip">Reset</span>
+    </div>
+  </div>
+
+  <div [class.loading--background]="progress.now !== progress.full" #parent class="editor--wrapper">
+    <div
+      class="loading--wrapper"
+      *ngIf="progress.now !== progress.full && !progressIndicator?.ringClosed"
+    >
+      <div class="loading">
+        <app-progress-ring
+          #progressIndicator
+          [radius]="150"
+          [stroke]="8"
+          [progress]="progress.percentage"
+          label="Downloading slices"
+        ></app-progress-ring>
+      </div>
+    </div>
+
+    <canvas #canvas class="editor"> </canvas>
+    <div
+      class="editor-grid"
+      [style.grid-template-columns]="'1fr '.repeat(canvases.length)"
+    >
+      <ng-container #container></ng-container>
+    </div>
+  </div>
+
+  <div [class.tools--measurements__hidden]="!sidebarActive" class="tools--measurements">
+    <div class="tools--measurements--header">Measurements</div>
+    <div
+      class="measurement"
+      [class.measurement--active]="shape.isSelected"
+      *ngFor="let shape of shapes; let i = index"
+    >
+      <span class="measurement--index">{{ i + 1 }}</span>
+      <div class="measurement--details">
+        <input class="measurement--label" />
+      </div>
+    </div>
+  </div>
+</div>
