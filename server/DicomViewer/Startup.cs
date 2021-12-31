@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.Tasks;
 using AutoMapper;
 using DicomViewer.Data;
 using DicomViewer.Helpers;
@@ -66,8 +67,7 @@ namespace DicomViewer
                 var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
                 opt.Filters.Add(new AuthorizeFilter(policy));
             });
-
-            services.AddControllers();
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "DicomViewer", Version = "v1" });
@@ -108,6 +108,7 @@ namespace DicomViewer
                 .SetIsOriginAllowed(origin => true) // allow any origin
                 .AllowCredentials()); // allow credentials
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });

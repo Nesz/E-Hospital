@@ -8,6 +8,7 @@ using DicomParser;
 using DicomViewer.Data;
 using DicomViewer.Dtos;
 using DicomViewer.Entities;
+using DicomViewer.Entities.Dtos.Request;
 using DicomViewer.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -43,18 +44,18 @@ namespace DicomViewer.Services
             return await _dataContext.DicomMetas.ToListAsync();
         }
         
-        public async Task<Stream> GetFrameData(string studyId, string seriesId, int instanceId)
+        public async Task<Stream> GetSliceData(SliceRequest request)
         {
             var dicom = await _dataContext.DicomMetas.FirstOrDefaultAsync(x =>
-                x.StudyId == studyId &&
-                x.SeriesId == seriesId &&
-                x.InstanceId == instanceId
+                x.StudyId == request.StudyId &&
+                x.SeriesId == request.SeriesId &&
+                x.InstanceId == request.InstanceId
             );
-
-            return await GetFrameStream(new ObjectId(dicom.MongoId));
+            
+            return await _fileGrid.OpenDownloadStreamAsync(new ObjectId(dicom.MongoId));
         }
 
-        public async Task SaveDicom(Dicom dicom, string filename)
+        private async Task SaveDicom(Dicom dicom, string filename)
         {
             var frame = dicom.Entries[DicomConstats.PixelData].GetAsListBytes()[0];
             dicom.Entries.Remove(DicomConstats.PixelData);
@@ -89,11 +90,6 @@ namespace DicomViewer.Services
             var results = await _fileGrid.FindAsync(filter);
             return results.First().Metadata.ToDictionary();
         }
-        
-        public async Task<Stream> GetFrameStream(ObjectId id)
-        {
-            return await _fileGrid.OpenDownloadStreamAsync(id);
-        }
 
         public async Task SaveFiles(IEnumerable<IFormFile> files)
         {
@@ -112,12 +108,12 @@ namespace DicomViewer.Services
             //await Task.WhenAll(tasks);
         }
 
-        public async Task<dynamic> GetFrameMetadata(string studyId, string seriesId, int instanceId)
+        public async Task<dynamic> GetSliceMetadata(SliceMetadataRequest request)
         {
             var dicom = await _dataContext.DicomMetas.FirstOrDefaultAsync(x =>
-                x.StudyId == studyId &&
-                x.SeriesId == seriesId &&
-                x.InstanceId == instanceId
+                x.StudyId == request.StudyId &&
+                x.SeriesId == request.SeriesId &&
+                x.InstanceId == request.InstanceId
             );
 
             /*var dicom = await _dataContext.DicomMetas
@@ -129,10 +125,10 @@ namespace DicomViewer.Services
             return await GetMetadata(new ObjectId(dicom.MongoId));
         }
         
-        public async Task<dynamic> GetSeriesMetadata(string studyId, string seriesId)
+        public async Task<dynamic> GetSeriesMetadata(SeriesMetadataRequest request)
         {
             var instances = await _dataContext.DicomMetas
-                .Where(x => x.StudyId == studyId && x.SeriesId == seriesId)
+                .Where(x => x.StudyId == request.StudyId && x.SeriesId == request.SeriesId)
                 .OrderBy(x => x.InstanceId)
                 .ToListAsync();
 
