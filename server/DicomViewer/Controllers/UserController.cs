@@ -1,7 +1,5 @@
 ﻿using System.Threading.Tasks;
 using DicomViewer.Dtos;
-using DicomViewer.Entities.Dtos.Request;
-using DicomViewer.Entities.Dtos.Response;
 using DicomViewer.Services;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,7 +1,8 @@
+using System;
 using System.Text;
-using System.Threading.Tasks;
 using AutoMapper;
 using DicomViewer.Data;
+using DicomViewer.Entities;
 using DicomViewer.Helpers;
 using DicomViewer.Middleware;
 using DicomViewer.Services;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -41,12 +43,13 @@ namespace DicomViewer
             services
                 .AddHttpContextAccessor()
                 .AddSingleton(mapperConfig.CreateMapper())
+                .AddScoped<IPasswordHasher<User>, BCryptPasswordHasher<User>>()
                 .AddScoped<IUserAccessor, UserAccessor>()
                 .AddScoped<IDicomService, DicomService>()
                 .AddScoped<IUserService, UserService>()
                 .AddDbContext<DataContext>(opt =>
                 {
-                    opt.UseLoggerFactory(factory);
+                    //opt.UseLoggerFactory(factory);
                     opt.UseNpgsql(Configuration.GetConnectionString("DBConnection"));
                 })
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -86,8 +89,10 @@ namespace DicomViewer
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider)
         {
+            serviceProvider.GetService<DataContext>()?.Database.Migrate();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

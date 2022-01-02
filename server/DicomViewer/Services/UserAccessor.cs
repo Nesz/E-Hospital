@@ -2,7 +2,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 
-namespace DicomViewer.Helpers
+namespace DicomViewer.Services
 {
     public class UserAccessor : IUserAccessor
     {

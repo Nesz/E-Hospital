@@ -1,6 +1,8 @@
-﻿using AutoMapper;
+﻿using System;
+using AutoMapper;
 using DicomViewer.Dtos;
 using DicomViewer.Entities;
+using Microsoft.OpenApi.Extensions;
 
 namespace DicomViewer.Helpers
 {
@@ -8,7 +10,8 @@ namespace DicomViewer.Helpers
     {
         public MappingProfile()
         {
-            CreateMap<User, UserDto>();
+            CreateMap<User, UserDto>()
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => Enum.GetName(src.Role)));
         }
     }
 }

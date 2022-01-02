@@ -12,7 +12,7 @@ using DicomViewer.Entities;
 using DicomViewer.Entities.Dtos.Request;
 using DicomViewer.Entities.Dtos.Response;
 using DicomViewer.Exceptions;
-using DicomViewer.Helpers;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -25,17 +25,20 @@ namespace DicomViewer.Services
         private readonly DataContext _dataContext;
         private readonly IUserAccessor _userAccessor;
         private readonly IConfiguration _configuration;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
         public UserService(
             DataContext dataContext, 
             IUserAccessor userAccessor, 
             IConfiguration configuration, 
+            IPasswordHasher<User> passwordHasher,
             IMapper mapper
         ) {
             _mapper = mapper;
             _dataContext = dataContext;
             _userAccessor = userAccessor;
             _configuration = configuration;
+            _passwordHasher = passwordHasher;
         }
         
         public async Task<User> GetById(long id)
@@ -82,21 +85,22 @@ namespace DicomViewer.Services
             var alreadyExists = await ExistsByEmail(request.Email);
             if (alreadyExists)
                 throw new RestException(HttpStatusCode.Conflict, new { Error = "User with this email already exists" });
-
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
-            var newUser = new User
+            
+            var user = new User
             {
                 Email = request.Email,
-                PasswordHash = hashedPassword
+                Role = Role.PATIENT
             };
+            
+            user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
 
-            await _dataContext.Users.AddAsync(newUser);
+            await _dataContext.Users.AddAsync(user);
             await _dataContext.SaveChangesAsync();
 
             return new SignUpResponseDto
             {
-                User = _mapper.Map<UserDto>(newUser),
-                Token = GenerateJwtToken(newUser)
+                User = _mapper.Map<UserDto>(user),
+                Token = GenerateJwtToken(user)
             };
         }
         
@@ -106,7 +110,8 @@ namespace DicomViewer.Services
             if (user == null)
                 throw new RestException(HttpStatusCode.Unauthorized, new { Error = "Invalid Credentials"});
 
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
+            if (PasswordVerificationResult.Failed == result)
                 throw new RestException(HttpStatusCode.Unauthorized, new { Error = "Invalid Credentials" });
 
             return new SignInResponseDto 

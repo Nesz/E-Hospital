@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DicomViewer.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [DisableRequestSizeLimit]
     public class DicomController : ControllerBase
     {
