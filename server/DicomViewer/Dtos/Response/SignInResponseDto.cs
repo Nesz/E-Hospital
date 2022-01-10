@@ -1,6 +1,4 @@
-﻿using DicomViewer.Dtos;
-
-namespace DicomViewer.Entities.Dtos.Response
+﻿namespace DicomViewer.Dtos.Response
 {
     public class SignInResponseDto
     {

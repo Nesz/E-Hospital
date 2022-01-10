@@ -10,4 +10,20 @@ html, body {
 
 .flex {
   display: flex;
+  &--column {
+    display: flex;
+    flex-flow: column;
+  }
+  &--centered {
+    &__vertically {
+      justify-content: center;
+    }
+    &__horizontally {
+      align-items: center;
+    }
+    &__both {
+      justify-content: center;
+      align-items: center;
+    }
+  }
 }

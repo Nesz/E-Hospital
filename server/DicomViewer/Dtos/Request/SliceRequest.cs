@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace DicomViewer.Entities.Dtos.Request
+namespace DicomViewer.Dtos.Request
 {
     public class SliceRequest
     {
         [Required]
-        public string PatientId { get; set; }
+        public long PatientId { get; set; }
         
         [Required]
         public string StudyId { get; set; }

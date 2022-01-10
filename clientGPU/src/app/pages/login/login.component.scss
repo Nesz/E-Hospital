@@ -1,0 +1,45 @@
+.login {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  width: 350px;
+  background-color: #12a5a4;
+
+
+  &--wrapper {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: calc(100vh - 44px);
+  }
+}
+
+.input--wrapper {
+  padding: 10px;
+
+  input {
+    width: 175px;
+    height: 40px;
+    box-sizing: border-box;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+    padding: 10px;
+
+    &:focus {
+      border: 1px solid black;
+    }
+  }
+}
+
+button {
+  width: 100px;
+  height: 40px;
+  border: none;
+  border-radius: 5px;
+  outline: none;
+  box-shadow: none;
+  text-transform: lowercase;
+}

@@ -1,9 +1,0 @@
-<div class="wrapper" *ngIf="studies !== undefined">
-  <div *ngFor="let patientId of keys(studies)" class="patient">
-    <div *ngFor="let studyId of keys(studies[patientId])" class="study">
-      <div *ngFor="let seriesId of keys(studies[patientId][studyId])" class="series">
-        {{ patientId }} {{ studyId }} {{ seriesId }}
-      </div>
-    </div>
-  </div>
-</div>

@@ -1,26 +1,22 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using DicomParser;
+using DicomViewer.Dtos;
+using DicomViewer.Dtos.Request;
 using DicomViewer.Entities;
-using DicomViewer.Entities.Dtos.Request;
-using Microsoft.AspNetCore.Http;
-using MongoDB.Bson;
 
 namespace DicomViewer.Services
 {
     public interface IDicomService
     {
-        public Task<IEnumerable<DicomMeta>> GetList();
+        public Task<IEnumerable<DicomMeta>> GetFilesMetadata(long patientId);
 
-        public Task<dynamic> GetMetadata(ObjectId id);
-
-        public Task SaveFiles(IEnumerable<IFormFile> files);
-
-        public Task<dynamic> GetSeriesMetadata(SeriesMetadataRequest request);
+        public Task SaveFiles(SaveFilesRequest request);
         
-        public Task<Stream> GetSliceData(SliceRequest request);
-        
+        public Task<Stream> GetSlice(SliceRequest request);
+
+        public Task<SerieDto> GetSeriesMetadata(SeriesMetadataRequest request);
+
         public Task<dynamic> GetSliceMetadata(SliceMetadataRequest request);
 
     }

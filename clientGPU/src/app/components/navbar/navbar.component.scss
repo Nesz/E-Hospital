@@ -1,8 +1,16 @@
 @import "../../../variables";
 
-.toolbar {
+.navbar {
   height: 44px;
   display: flex;
   align-items: center;
   background: $color0;
+
+  &--main {
+    padding-left: 30px;
+    font-size: 1.125rem;
+    color: white;
+    font-family: "myriad-pro-1", "myriad-pro-2", HelveticaNeue, Helvetica, Arial, serif;
+    font-weight:700
+  }
 }

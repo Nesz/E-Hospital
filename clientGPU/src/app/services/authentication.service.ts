@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, EMPTY, Observable, of, throwError } from "rxjs";
+import { BehaviorSubject, EMPTY, Observable } from "rxjs";
 import { User } from "../model/user";
 import { HttpClient } from "@angular/common/http";
-import { catchError, tap } from "rxjs/operators";
+import { catchError, map, tap } from "rxjs/operators";
 
 interface SignInResponse {
   user: User,
@@ -14,12 +14,12 @@ interface SignInResponse {
 })
 export class AuthenticationService {
 
-  private _userSubject = new BehaviorSubject<User | null>(null);
+  private _userSubject = new BehaviorSubject<User | undefined>(undefined);
   public user = this._userSubject.asObservable();
 
   constructor(private readonly http: HttpClient) { }
 
-  public currentUserValue(): User | null {
+  public currentUserValue(): User | undefined {
     return this._userSubject.value;
   }
 
@@ -30,11 +30,30 @@ export class AuthenticationService {
           console.error(err)
           return EMPTY;
         }),
-        tap(x => {
+        map(x => {
           this._userSubject.next(x.user)
           localStorage.setItem('access_token', x.token)
+          return x.user;
         })
       );
+  }
+
+  public me(): Observable<User> {
+    return this.http.get<User>('https://localhost:5001/api/user/me')
+      .pipe(
+        catchError(err => {
+          console.error(err)
+          //this.logout();
+          return EMPTY;
+        }),
+        tap(x => {
+          this._userSubject.next(x)
+        })
+      );
+  }
+
+  logout(): void {
+    localStorage.removeItem('access_token');
   }
 
 }

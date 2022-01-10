@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
@@ -8,10 +9,11 @@ using System.Threading.Tasks;
 using AutoMapper;
 using DicomViewer.Data;
 using DicomViewer.Dtos;
+using DicomViewer.Dtos.Request;
+using DicomViewer.Dtos.Response;
 using DicomViewer.Entities;
-using DicomViewer.Entities.Dtos.Request;
-using DicomViewer.Entities.Dtos.Response;
 using DicomViewer.Exceptions;
+using DicomViewer.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -80,6 +82,46 @@ namespace DicomViewer.Services
             return _mapper.Map<UserDto>(user);
         }
 
+        public async Task<Page<UserDto>> GetPatientsList(PageRequest request)
+        {
+            var currentUser = await GetById(_userAccessor.GetUserId());
+            if (Role.Doctor != currentUser.Role && Role.Admin != currentUser.Role)
+                throw new RestException(HttpStatusCode.Conflict, new { Error = "You don't have access to this resource" });
+            
+            var patients = _dataContext.Users
+                .Where(user => user.Role == Role.Patient)
+                .If(
+                    () => !string.IsNullOrWhiteSpace(request.FilterKey),
+                    e => e.Where(user => 
+                        user.Email.ToLower().Contains(request.FilterKey) ||
+                        user.FirstName.ToLower().Contains(request.FilterKey) ||
+                        user.LastName.ToLower().Contains(request.FilterKey)
+                    )
+                );
+            
+            var patientsCount = await patients.CountAsync();
+            var patientsData = await patients.IfThenElse(
+                    () => OrderDirection.ASCENDING == request.OrderDirection,
+                    e => e.OrderBy(user => EF.Property<User>(user, request.PageOrder)),
+                    e => e.OrderByDescending(user => EF.Property<User>(user, request.PageOrder))
+                )
+                .Skip(request.PageSize * (request.PageNumber - 1))
+                .Take(request.PageSize)
+                .Select(user => _mapper.Map<UserDto>(user))
+                .ToListAsync();
+
+            return new Page<UserDto>
+            {
+                PageTotal = (int) Math.Ceiling(patientsCount / (double) request.PageSize),
+                PageCurrent = request.PageNumber,
+                PageSize = request.PageSize,
+                PageOrder = request.PageOrder,
+                OrderDirection = request.OrderDirection,
+                Data = patientsData
+            };
+
+        }
+
         public async Task<SignUpResponseDto> SignUp(SignUpRequestDto request)
         {
             var alreadyExists = await ExistsByEmail(request.Email);
@@ -88,8 +130,10 @@ namespace DicomViewer.Services
             
             var user = new User
             {
+                FirstName = request.FirstName,
+                LastName = request.LastName,
                 Email = request.Email,
-                Role = Role.PATIENT
+                Role = Role.Patient
             };
             
             user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace DicomViewer.Entities.Dtos.Request
+namespace DicomViewer.Dtos.Request
 {
     public class SignInRequestDto
     {

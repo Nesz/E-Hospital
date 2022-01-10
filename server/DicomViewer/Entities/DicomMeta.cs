@@ -9,7 +9,7 @@ namespace DicomViewer.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
         
-        public string PatientId { get; set; }
+        public long PatientId { get; set; }
         public string StudyId { get; set; }
         public string SeriesId { get; set; }
         public int InstanceId { get; set; }

@@ -32,8 +32,8 @@ namespace DicomViewer.Migrations
                     b.Property<string>("MongoId")
                         .HasColumnType("text");
 
-                    b.Property<string>("PatientId")
-                        .HasColumnType("text");
+                    b.Property<long>("PatientId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("SeriesId")
                         .HasColumnType("text");

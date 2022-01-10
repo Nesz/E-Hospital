@@ -3,6 +3,9 @@ import { Dicom, request } from '../model/dicom';
 import { Observable, Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
+import { User } from "../model/user";
+import { OrderDirection } from "../model/order-direction";
+import { Page } from "../model/page";
 
 export interface DicomMeta {
   id: number;
@@ -34,7 +37,7 @@ export class ApiService {
     instanceId: number;
   }): Observable<ArrayBuffer> {
     return this.http.get(
-      `https://localhost:5001/dicom/${args.patientId}/${args.studyId}/${args.seriesId}/${args.instanceId}/frame`,
+      `https://localhost:5001/api/dicom/${args.patientId}/${args.studyId}/${args.seriesId}/${args.instanceId}/frame`,
       {
         responseType: 'arraybuffer',
       }
@@ -47,9 +50,8 @@ export class ApiService {
     seriesId: string;
     instanceId: number;
   }) {
-    return this.http
-      .get<request>(
-        `https://localhost:5001/dicom/${args.patientId}/${args.studyId}/${args.seriesId}/${args.instanceId}/meta`
+    return this.http.get<request>(
+        `https://localhost:5001/api/dicom/${args.patientId}/${args.studyId}/${args.seriesId}/${args.instanceId}/meta`
       )
       .pipe(
         map((x) => {
@@ -60,11 +62,20 @@ export class ApiService {
 
   public getSeriesMetadata(args: { patientId: string; studyId: string; seriesId: string }) {
     return this.http.get<SeriesMeta>(
-      `https://localhost:5001/dicom/${args.patientId}/${args.studyId}/${args.seriesId}`
+      `https://localhost:5001/api/dicom/${args.patientId}/${args.studyId}/${args.seriesId}`
     );
   }
 
-  public getList(): Observable<DicomMeta[]> {
-    return this.http.get<DicomMeta[]>('https://localhost:5001/WeatherForecast');
+  public getPatientsList(args: {
+    pageNumber: number,
+    pageSize: number,
+    pageOrder: string,
+    orderDirection: OrderDirection,
+    filterKey: string
+  }) {
+    return this.http.get<Page<User>>('https://localhost:5001/api/user/patients', {
+      params: args
+    });
   }
+
 }

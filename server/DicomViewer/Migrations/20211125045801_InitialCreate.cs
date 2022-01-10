@@ -13,7 +13,7 @@ namespace DicomViewer.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    PatientId = table.Column<string>(type: "text", nullable: true),
+                    PatientId = table.Column<long>(type: "bigint", nullable: false),
                     StudyId = table.Column<string>(type: "text", nullable: true),
                     SeriesId = table.Column<string>(type: "text", nullable: true),
                     InstanceId = table.Column<int>(type: "integer", nullable: false),

@@ -6,7 +6,7 @@ namespace DicomParser
     public class DicomItem
     {
         public string VR { get; }
-        public object Value { get; }
+        public object Value { get; set; }
 
         public DicomItem(string valueRepresentation, object value)
         {

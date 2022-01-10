@@ -1,0 +1,45 @@
+@import "../../../variables";
+
+.sidebar {
+  box-sizing: border-box;
+  padding: 30px;
+  background: $color0;
+  width: 30ch;
+  height: calc(100vh - 44px);
+  color: white;
+  font-family: Bahnschrift;
+  transition: 0.5s;
+
+  &--user {
+    &__item {
+      font-size: 1.125rem;
+    }
+  }
+
+  &--divider {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+    border: 1px solid $color4;
+  }
+
+  &--item {
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 5px;
+
+    &:last-child {
+      margin-top: auto;
+    }
+
+    &--icon {
+      padding: 5px;
+    }
+
+    &:hover {
+      background-color: $color4;
+    }
+  }
+}

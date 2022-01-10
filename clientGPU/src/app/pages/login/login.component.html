@@ -1,0 +1,23 @@
+<div class="login--wrapper">
+
+  <form class="login" [formGroup]="form" (ngSubmit)="signIn()" >
+    <div class="input--wrapper">
+      <input
+        value="ahah@p2.pl"
+        formControlName="email"
+        placeholder="Email"
+      />
+    </div>
+
+    <div class="input--wrapper">
+      <input
+        value="haslo"
+        formControlName="password"
+        placeholder="Password"
+      />
+    </div>
+
+    <button type="submit">sign in</button>
+  </form>
+
+</div>

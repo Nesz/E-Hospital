@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using DicomViewer.Dtos.Request;
 using DicomViewer.Entities;
-using DicomViewer.Entities.Dtos.Request;
 using DicomViewer.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DicomViewer.Controllers
@@ -22,16 +21,16 @@ namespace DicomViewer.Controllers
             _dicomService = dicomService;
         }
 
-        [HttpGet]
-        public async Task<IEnumerable<DicomMeta>> GetDicomList()
+        [HttpGet("{patientId:long}")]
+        public async Task<IEnumerable<DicomMeta>> GetDicomList(long patientId)
         {
-           return await _dicomService.GetList();
+           return await _dicomService.GetFilesMetadata(patientId);
         }
 
         [HttpGet("{patientId}/{studyId}/{seriesId}/{instanceId:int}/frame")]
-        public async Task<Stream> GetFrameInstance([FromRoute] SliceRequest request)
+        public async Task<Stream> GetSlice([FromRoute] SliceRequest request)
         {
-            return await _dicomService.GetSliceData(request);
+            return await _dicomService.GetSlice(request);
         }
 
         [HttpGet("{patientId}/{studyId}/{seriesId}/{instanceId:int}/meta")]
@@ -46,10 +45,10 @@ namespace DicomViewer.Controllers
             return await _dicomService.GetSeriesMetadata(request);
         }
 
-        [HttpPost]
-        public async Task UploadDicom([FromForm(Name = "file[]")] IFormFile[] files)
+        [HttpPost("{patientId}")]
+        public async Task UploadDicom([FromForm] SaveFilesRequest request)
         {
-            await _dicomService.SaveFiles(files);
+            await _dicomService.SaveFiles(request);
         }
         
     }

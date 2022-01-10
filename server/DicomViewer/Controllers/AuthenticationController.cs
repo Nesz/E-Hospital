@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
-using DicomViewer.Entities.Dtos.Request;
-using DicomViewer.Entities.Dtos.Response;
+using DicomViewer.Dtos.Request;
+using DicomViewer.Dtos.Response;
 using DicomViewer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

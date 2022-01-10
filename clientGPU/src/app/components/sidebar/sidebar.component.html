@@ -1,0 +1,22 @@
+<div class="sidebar">
+  <div class="sidebar--user">
+    <div class="sidebar--user__item">{{user?.firstName}} {{user?.lastName}}</div>
+    <div class="sidebar--user__item">Email: {{user?.email}}</div>
+    <div class="sidebar--user__item">Role: {{user?.role}}</div>
+  </div>
+
+  <div class="sidebar--divider"></div>
+
+  <div *ngIf="role.Patient !== user?.role" routerLink="/patients" class="sidebar--item">
+    <div class="sidebar--item--icon"><img src="assets/search.svg" alt=""></div>Find patient</div>
+
+  <div *ngIf="role.Patient === user?.role" class="sidebar--item">
+    <div class="sidebar--item--icon"><img src="assets/folder.svg" alt=""></div>My files</div>
+
+  <div class="sidebar--item">
+    <div class="sidebar--item--icon"><img src="assets/settings.svg" alt=""></div>Settings</div>
+
+  <div (click)="logout()" class="sidebar--item">
+    <div class="sidebar--item--icon"><img src="assets/logout.svg" alt="">
+    </div>Logout</div>
+</div>

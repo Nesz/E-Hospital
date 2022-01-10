@@ -2,7 +2,6 @@
 using AutoMapper;
 using DicomViewer.Dtos;
 using DicomViewer.Entities;
-using Microsoft.OpenApi.Extensions;
 
 namespace DicomViewer.Helpers
 {
