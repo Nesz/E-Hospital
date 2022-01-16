@@ -1,9 +1,14 @@
-import { Component, OnInit, ViewEncapsulation } from "@angular/core";
-import { AuthenticationService } from "../../services/authentication.service";
+import { AfterViewInit, Component, ViewChild, ViewEncapsulation } from "@angular/core";
 import { ApiService } from "../../services/api.service";
 import { OrderDirection } from "../../model/order-direction";
-import { Page } from "../../model/page";
 import { User } from "../../model/user";
+import { Header, TableComponent } from "../../components/table/table.component";
+import { Router } from "@angular/router";
+import { Role } from "../../model/role";
+
+interface HeaderSorted extends Header<User> {
+  efField: string
+}
 
 @Component({
   selector: 'app-patients',
@@ -11,17 +16,38 @@ import { User } from "../../model/user";
   styleUrls: ['./patients.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class PatientsComponent implements OnInit {
+export class PatientsComponent implements AfterViewInit {
+  @ViewChild('table') table!: TableComponent<User>;
 
   filter: string = '';
-  itemsPerPage = 10;
-  headers = ['#', 'id', 'firstName', 'lastName', 'email']
-  page!: Page<User>;
-  rowHover = -1;
+  headers = [
+    { name: '#', sortable: false, accessor: (user: User) => 0 },
+    { name: 'id', efField: 'Id', sortable: true, accessor: (user: User) => user.id },
+    { name: 'first name', efField: 'FirstName', sortable: true, accessor: (user: User) => user.firstName },
+    { name: 'last name', efField: 'LastName', sortable: true, accessor: (user: User) => user.lastName  },
+    { name: 'e-mail', sortable: false, accessor: (user: User) => user.email },
+    { name: 'role', sortable: false, accessor: (user: User) => user.role },
+  ]
 
   constructor(
+    private readonly router: Router,
     private readonly api: ApiService
   ) { }
+
+  ngAfterViewInit() {
+    this.table.pageRequested.subscribe(request => {
+      this.api.getPatientsList({
+        pageNumber: request.pageNumber,
+        pageSize: request.itemsPerPage,
+        pageOrder: this.table.sortedBy ? (this.table.sortedBy.header as HeaderSorted).efField : 'Id',
+        orderDirection: this.table.sortedBy ? this.table.sortedBy.order : OrderDirection.ASCENDING,
+        filterKey: this.filter,
+        roleFilter: Role.Patient
+      }).subscribe((page) => {
+        this.table.page = page;
+      });
+    })
+  }
 
   ngOnInit(): void {
     this.api.getPatientsList({
@@ -29,38 +55,19 @@ export class PatientsComponent implements OnInit {
       pageSize: 10,
       pageOrder: 'Id',
       orderDirection: OrderDirection.ASCENDING,
-      filterKey: ''
+      filterKey: this.filter,
+      roleFilter: Role.Patient
     }).subscribe((page) => {
-      this.page = page;
+      this.table.page = page;
     });
-  }
-
-  getField(index: number, field: string) {
-    if (field === '#')
-      return `[${index + 1}]`;
-    // @ts-ignore
-    return this.page?.data[index][field];
-  }
-
-  goToPage(number: number) {
-    this.api.getPatientsList({
-      pageNumber: number,
-      pageSize: this.itemsPerPage,
-      pageOrder: 'Id',
-      orderDirection: OrderDirection.ASCENDING,
-      filterKey: this.filter
-    }).subscribe((page) => {
-      this.page = page;
-    });
-  }
-
-  onSelect(target: EventTarget | null) {
-    this.itemsPerPage = Number((target as HTMLOptionElement).value)
-    this.goToPage(1)
   }
 
   onFilterChange($event: string) {
     this.filter = $event;
-    this.goToPage(1)
+    this.table.requestPage(1)
+  }
+
+  goToPatient($event: User) {
+    this.router.navigate([`/patient/${$event.id}`])
   }
 }

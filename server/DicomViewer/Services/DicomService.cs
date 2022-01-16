@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AutoMapper;
 using DicomParser;
 using DicomViewer.Data;
 using DicomViewer.Dtos;
@@ -27,12 +28,19 @@ namespace DicomViewer.Services
         private readonly IUserAccessor _userAccessor;
         private readonly DataContext _dataContext;
         private readonly GridFSBucket _fileGrid;
+        private readonly IMapper _mapper;
 
-        public DicomService(DataContext dataContext, IUserAccessor userAccessor, IUserService userService)
+        public DicomService(
+            DataContext dataContext, 
+            IUserAccessor userAccessor, 
+            IUserService userService,
+            IMapper mapper
+        )
         {
             _dataContext = dataContext;
             _userAccessor = userAccessor;
             _userService = userService;
+            _mapper = mapper;
             
             var client = new MongoClient("mongodb://rootuser:rootpass@localhost:27017");
             var database = client.GetDatabase("dicom");
@@ -46,23 +54,25 @@ namespace DicomViewer.Services
             });
         }
 
-        public async Task<IEnumerable<DicomMeta>> GetFilesMetadata(long patientId)
+        public async Task<IEnumerable<StudyMetadata>> GetStudiesMetadata(long patientId)
         {
             var user = await _userService.GetById(_userAccessor.GetUserId());
 
-            if (user.Id != patientId || user.Role is not (Role.Admin or Role.Doctor))
+            if (user.Id != patientId && user.Role is not (Role.Admin or Role.Doctor))
                 throw new RestException(HttpStatusCode.Forbidden, new { Error = "You can't access this resource" });
-            
-            return await _dataContext.DicomMetas
+
+            var metas = await _dataContext.DicomMetas
                 .Where(x => x.PatientId == patientId)
                 .ToListAsync();
+
+            return _mapper.Map<IEnumerable<StudyMetadata>>(metas);
         }
 
         public async Task<Stream> GetSlice(SliceRequest request)
         {
             var user = await _userService.GetById(_userAccessor.GetUserId());
 
-            if (user.Id != request.PatientId || user.Role is not (Role.Admin or Role.Doctor))
+            if (user.Id != request.PatientId && user.Role is not (Role.Admin or Role.Doctor))
                 throw new RestException(HttpStatusCode.Forbidden, new { Error = "You can't access this resource" });
 
             var dicom = await _dataContext.DicomMetas.FirstOrDefaultAsync(x =>
@@ -86,7 +96,7 @@ namespace DicomViewer.Services
         {
             var user = await _userService.GetById(_userAccessor.GetUserId());
 
-            if (user.Id != request.PatientId || user.Role is not (Role.Admin or Role.Doctor))
+            if (user.Id != request.PatientId && user.Role is not (Role.Admin or Role.Doctor))
                 throw new RestException(HttpStatusCode.Forbidden, new { Error = "You can't access this resource" });
             
             var dicom = await _dataContext.DicomMetas.FirstOrDefaultAsync(x =>
@@ -102,7 +112,7 @@ namespace DicomViewer.Services
         {
             var user = await _userService.GetById(_userAccessor.GetUserId());
 
-            if (user.Id != request.PatientId || user.Role is not (Role.Admin or Role.Doctor))
+            if (user.Id != request.PatientId && user.Role is not (Role.Admin or Role.Doctor))
                 throw new RestException(HttpStatusCode.Forbidden, new { Error = "You can't access this resource" });
             
             var instances = await _dataContext.DicomMetas
@@ -152,6 +162,17 @@ namespace DicomViewer.Services
                     PropertyNamingPolicy = new LowercaseJsonNamingPolicy(),
                 }))
             });
+
+            var studyDate = dicom.Entries["00080020"].GetAsDateTime();
+            var studyTime = dicom.Entries["00080030"].GetAsTimeSpan();
+            var studyDateTime = new DateTime(
+                studyDate.Year,
+                studyDate.Month,
+                studyDate.Day,
+                studyTime.Hours,
+                studyTime.Minutes,
+                studyTime.Seconds
+            );
             
             var dk = new DicomMeta
             {
@@ -160,6 +181,9 @@ namespace DicomViewer.Services
                 SeriesId = dicom.Entries["0020000E"].GetAsString().Trim(),
                 StudyId = dicom.Entries["0020000D"].GetAsString().Trim(),
                 InstanceId = Convert.ToInt32(dicom.Entries["00200013"].GetAsUInt()),
+                StudyDescription = dicom.Entries["00081030"].GetAsString().Trim(),
+                Modality = dicom.Entries["00080060"].GetAsString().Trim(),
+                StudyDate = studyDateTime
             };
             
             Console.WriteLine($"{dk.PatientId}/{dk.StudyId}/{dk.SeriesId}");

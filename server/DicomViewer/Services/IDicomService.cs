@@ -9,7 +9,7 @@ namespace DicomViewer.Services
 {
     public interface IDicomService
     {
-        public Task<IEnumerable<DicomMeta>> GetFilesMetadata(long patientId);
+        public Task<IEnumerable<StudyMetadata>> GetStudiesMetadata(long patientId);
 
         public Task SaveFiles(SaveFilesRequest request);
         

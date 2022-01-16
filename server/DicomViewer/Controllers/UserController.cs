@@ -25,10 +25,16 @@ namespace DicomViewer.Controllers
             return await _userService.GetCurrentUser();
         }
         
-        [HttpGet("patients")]
-        public async Task<Page<UserDto>> GetPatientsList([FromQuery] PageRequest request)
+        [HttpGet("{patientId:long}")]
+        public async Task<UserDto> GetUser([FromRoute] long patientId)
         {
-            return await _userService.GetPatientsList(request);
+            return await _userService.GetUser(patientId);
+        }
+        
+        [HttpGet("patients")]
+        public async Task<Page<UserDto>> GetPatientsList([FromQuery] UserPageRequest request)
+        {
+            return await _userService.GetUsersList(request);
         }
     }
 }

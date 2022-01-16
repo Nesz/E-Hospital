@@ -1,4 +1,6 @@
-﻿using DicomParser;
+﻿using System;
+using System.Globalization;
+using DicomParser;
 
 namespace ConsoleApp2.types
 {

@@ -76,20 +76,31 @@ namespace DicomViewer.Services
             return user != null;
         }
 
+        public async Task<UserDto> GetUser(long patientId)
+        {
+            var user = await GetById(patientId);
+            return _mapper.Map<UserDto>(user);
+        }
+
         public async Task<UserDto> GetCurrentUser()
         {
             var user = await GetById(_userAccessor.GetUserId());
             return _mapper.Map<UserDto>(user);
         }
 
-        public async Task<Page<UserDto>> GetPatientsList(PageRequest request)
+        public async Task<Page<UserDto>> GetUsersList(UserPageRequest request)
         {
             var currentUser = await GetById(_userAccessor.GetUserId());
             if (Role.Doctor != currentUser.Role && Role.Admin != currentUser.Role)
                 throw new RestException(HttpStatusCode.Conflict, new { Error = "You don't have access to this resource" });
+
+            var hasRole = Enum.TryParse(request.RoleFilter, out Role role);
             
             var patients = _dataContext.Users
-                .Where(user => user.Role == Role.Patient)
+                .If(
+                    () => hasRole,
+                    e => e.Where(user => user.Role == role)
+                )
                 .If(
                     () => !string.IsNullOrWhiteSpace(request.FilterKey),
                     e => e.Where(user => 

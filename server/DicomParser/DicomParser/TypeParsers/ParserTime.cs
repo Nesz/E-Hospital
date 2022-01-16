@@ -1,4 +1,6 @@
-﻿using DicomParser;
+﻿using System;
+using System.Globalization;
+using DicomParser;
 
 namespace ConsoleApp2.types
 {
@@ -7,7 +9,16 @@ namespace ConsoleApp2.types
         public override object Parse(ByteStream byteStream, string tag, bool hasType)
         {
             var length = hasType ? byteStream.ReadUInt16() : byteStream.ReadUInt32();
-            return byteStream.ReadString(length);
+            var timeString = byteStream.ReadString(length).Trim();
+
+            if (string.IsNullOrWhiteSpace(timeString))
+            {
+                return TimeSpan.Zero;
+            }
+            
+            var format = timeString.Contains(".") ? @"hmmss\.FFFFFF" : "hmmss";
+            
+            return TimeSpan.ParseExact(timeString, format, CultureInfo.InvariantCulture);
         }
     }
 }

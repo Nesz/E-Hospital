@@ -3,12 +3,17 @@
 .sidebar {
   box-sizing: border-box;
   padding: 30px;
-  background: $color0;
   width: 30ch;
   height: calc(100vh - 44px);
-  color: white;
   font-family: Bahnschrift;
   transition: 0.5s;
+  background: $color-dark-1;
+  color: $color-dark-text;
+  border-right: $color-dark-row-border-bottom;
+
+  &>*svg {
+    fill: $color-dark-text;
+  }
 
   &--user {
     &__item {
@@ -20,7 +25,7 @@
     margin-top: 10px;
     margin-bottom: 10px;
     width: 100%;
-    border: 1px solid $color4;
+    border: 1px solid #B0FF92;
   }
 
   &--item {
@@ -29,17 +34,27 @@
     border-radius: 5px;
     cursor: pointer;
     padding: 5px;
-
-    &:last-child {
-      margin-top: auto;
-    }
+    transition: all 0.5s ease-in-out;
 
     &--icon {
       padding: 5px;
+      app-icon svg {
+
+      }
+    }
+
+    &__text {
+      margin-left: 5px;
+      transition: all 0.3s ease-in-out;
     }
 
     &:hover {
-      background-color: $color4;
+      background-color: #B0FF92;
+
+      .sidebar--item__text {
+        margin-left: 10px;
+
+      }
     }
   }
 }

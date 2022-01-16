@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using DicomViewer.Dtos;
 using DicomViewer.Dtos.Request;
 using DicomViewer.Entities;
 using DicomViewer.Services;
@@ -22,9 +23,9 @@ namespace DicomViewer.Controllers
         }
 
         [HttpGet("{patientId:long}")]
-        public async Task<IEnumerable<DicomMeta>> GetDicomList(long patientId)
+        public async Task<IEnumerable<StudyMetadata>> GetStudiesMetadata(long patientId)
         {
-           return await _dicomService.GetFilesMetadata(patientId);
+           return await _dicomService.GetStudiesMetadata(patientId);
         }
 
         [HttpGet("{patientId}/{studyId}/{seriesId}/{instanceId:int}/frame")]

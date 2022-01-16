@@ -8,15 +8,30 @@
   <div class="sidebar--divider"></div>
 
   <div *ngIf="role.Patient !== user?.role" routerLink="/patients" class="sidebar--item">
-    <div class="sidebar--item--icon"><img src="assets/search.svg" alt=""></div>Find patient</div>
+    <div class="sidebar--item--icon">
+      <app-icon icon="search"></app-icon>
+    </div>
+    <span class="sidebar--item__text">Find Patient</span>
+  </div>
 
   <div *ngIf="role.Patient === user?.role" class="sidebar--item">
-    <div class="sidebar--item--icon"><img src="assets/folder.svg" alt=""></div>My files</div>
+    <div class="sidebar--item--icon">
+      <app-icon icon="folder"></app-icon>
+    </div>
+    <span class="sidebar--item__text">My Files</span>
+  </div>
 
   <div class="sidebar--item">
-    <div class="sidebar--item--icon"><img src="assets/settings.svg" alt=""></div>Settings</div>
+    <div class="sidebar--item--icon">
+      <app-icon icon="settings"></app-icon>
+    </div>
+    <span class="sidebar--item__text">Settings</span>
+  </div>
 
   <div (click)="logout()" class="sidebar--item">
-    <div class="sidebar--item--icon"><img src="assets/logout.svg" alt="">
-    </div>Logout</div>
+    <div class="sidebar--item--icon">
+      <app-icon icon="logout"></app-icon>
+    </div>
+    <span class="sidebar--item__text">Logout</span>
+  </div>
 </div>

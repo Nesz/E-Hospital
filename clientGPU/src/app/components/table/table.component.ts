@@ -1,24 +1,80 @@
-import { Component, EventEmitter, Input, OnInit } from "@angular/core";
-import { ApiService } from "../../services/api.service";
+import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from "@angular/core";
+import { Page } from "../../model/page";
+import { OrderDirection } from "../../model/order-direction";
+
+export interface Header<T> {
+  name: string,
+  sortable: boolean,
+  accessor: (t: T) => any,
+}
 
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
-  styleUrls: ['./table.component.scss']
+  styleUrls: ['./table.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
-export class TableComponent implements OnInit {
+export class TableComponent<T> implements OnInit {
 
-  @Input() pageCurrent!: number;
-  @Input() pageTotal!: number;
-  @Input() pageSize!: number;
-  @Input() tableHeaders!: string[];
-  @Input() tableData!: string[][];
-  @Input() getPage!: (page: number) => void;
+  OrderDirection = OrderDirection;
 
-  constructor(private api: ApiService) { }
+  itemsPerPage = 10;
+  sortedBy?: {
+    header: Header<T>,
+    order: OrderDirection
+  };
+
+  @Input() headers!: Header<T>[];
+  @Output() onRowClick = new EventEmitter<T>();
+  @Output() pageRequested = new EventEmitter<{
+    pageNumber: number
+    itemsPerPage: number
+  }>();
+
+  page!: Page<T>;
+
+  constructor() { }
 
   ngOnInit(): void {
-    //this.api.getPatientsList()
+
   }
 
+  getField(index: number, header: Header<T>) {
+    if (header.name === '#')
+      return `[${((this.page.pageCurrent - 1) * this.itemsPerPage) + index + 1}]`;
+    return header.accessor(this.page?.data[index]);
+  }
+
+  onSelect(target: EventTarget | null) {
+    this.itemsPerPage = Number((target as HTMLOptionElement).value)
+    this.requestPage(1)
+  }
+
+  requestPage(pageNumber: number) {
+    this.pageRequested.emit({
+      pageNumber: pageNumber,
+      itemsPerPage: this.itemsPerPage
+    })
+  }
+
+  sort(header: Header<T>) {
+    if (header === this.sortedBy?.header) {
+      if (OrderDirection.ASCENDING === this.sortedBy?.order) {
+        this.sortedBy.order = OrderDirection.DESCENDING
+      }
+      else if (OrderDirection.DESCENDING === this.sortedBy?.order) {
+        this.sortedBy = undefined;
+      }
+    }
+    else {
+      if (header.sortable) {
+        this.sortedBy = {
+          header: header,
+          order: OrderDirection.ASCENDING
+        }
+      }
+    }
+    console.log(this.sortedBy)
+    this.requestPage(1)
+  }
 }

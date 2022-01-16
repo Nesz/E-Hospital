@@ -17,6 +17,7 @@ import { PatientsComponent } from './pages/patients/patients.component';
 import { TableComponent } from './components/table/table.component';
 import { IconComponent } from './components/icon/icon.component';
 import { DelayedInputComponent } from './delayed-input/delayed-input.component';
+import { PatientComponent } from './pages/patient/patient.component';
 
 @NgModule({
   declarations: [
@@ -33,6 +34,7 @@ import { DelayedInputComponent } from './delayed-input/delayed-input.component';
     TableComponent,
     IconComponent,
     DelayedInputComponent,
+    PatientComponent,
   ],
   imports: [BrowserModule, AppRoutingModule, HttpClientModule, FormsModule, ReactiveFormsModule],
   providers: [],

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DicomViewer.Entities
@@ -14,6 +15,9 @@ namespace DicomViewer.Entities
         public string SeriesId { get; set; }
         public int InstanceId { get; set; }
         public string MongoId { get; set; }
+        public string Modality { get; set; }
+        public string StudyDescription { get; set; }
+        public DateTime StudyDate { get; set; }
 
     }
 }

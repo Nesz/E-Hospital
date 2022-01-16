@@ -73,10 +73,10 @@ export class CanvasPartComponent implements OnInit, AfterViewInit, OnDestroy {
 
   resetPosition = () => {
     const bbox = this.canvas?.nativeElement?.getBoundingClientRect();
-
     if (!bbox) {
       return
     }
+    console.log("XD")
     console.log(bbox)
     const [scale, offX, offY] = this.calculateAspectRatio({
       width: bbox.width,

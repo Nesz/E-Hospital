@@ -20,7 +20,9 @@ namespace DicomViewer.Services
         public Task<SignInResponseDto> SignIn(SignInRequestDto request);
         
         public Task<UserDto> GetCurrentUser();
+
+        public Task<UserDto> GetUser(long patientId);
         
-        public Task<Page<UserDto>> GetPatientsList(PageRequest request);
+        Task<Page<UserDto>> GetUsersList(UserPageRequest request);
     }
 }

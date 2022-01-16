@@ -13,7 +13,7 @@ namespace ConsoleApp2.types
             if (string.IsNullOrEmpty(dateString))
                 return dateString;
 
-            return DateTime.ParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture).ToShortDateString();
+            return DateTime.ParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture);
         }
     }
 }

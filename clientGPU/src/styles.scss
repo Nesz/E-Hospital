@@ -8,11 +8,19 @@ html, body {
 
 }
 
+.width100 {
+  width: 100%;
+}
+
 .flex {
   display: flex;
   &--column {
     display: flex;
     flex-flow: column;
+  }
+  &--row {
+    display: flex;
+    flex-flow: row;
   }
   &--centered {
     &__vertically {

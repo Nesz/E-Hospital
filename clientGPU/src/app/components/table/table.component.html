@@ -1,1 +1,80 @@
-<p>table works!</p>
+<div style="width: 100%" class="flex--column flex--centered__both">
+  <div
+    [style.grid-template-columns] = "'min-content '.repeat(headers.length)"
+    class="table">
+
+    <div class="table--headers">
+      <div class="table--header"
+           *ngFor="let header of headers" (click)="sort(header)">
+        <span class="table--header__text">{{ header.name }}</span>
+        <span
+          [style.visibility] = "sortedBy?.header == header ? 'visible' : 'hidden'"
+          [style.transform] = "sortedBy?.order === OrderDirection.DESCENDING ? 'scale(1, -1)': 'scale(1, 1)'"
+          class="table--header__sort">
+          <app-icon icon="sort"></app-icon>
+        </span>
+      </div>
+    </div>
+
+    <div class="table--footer"
+         style="justify-content: center"
+         [style.grid-column-end] = "headers.length + 1"
+         *ngIf="page?.data?.length === 0; else rows">
+      NO DATA
+    </div>
+
+    <ng-template #rows>
+      <div class="table--row"
+           (click)="onRowClick.emit(user)"
+           *ngFor="let user of page?.data; let index = index">
+        <div class="table--data" *ngFor="let header of headers">
+          {{ getField(index, header) }}
+        </div>
+
+      </div>
+      <div class="table--footer"
+           [style.grid-column-end] = "headers.length + 1"
+      >
+
+        <div>
+          <span class="table--footer__progress">
+            Page: {{ page?.pageCurrent }} / {{ page?.pageTotal }}
+          </span>
+        </div>
+
+        <div style="margin-left: auto" class="flex flex--centered__vertically">
+          <span>Items per page</span>
+          <select (change)="onSelect($event.target)" name="page-size">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+          </select>
+
+          <span style="padding-left: 35px; box-sizing: border-box"></span>
+
+          <button
+            [disabled]="page?.pageCurrent === 1"
+            (click)="requestPage(1)"
+          ><app-icon icon="double_left"></app-icon></button>
+
+          <button
+            [disabled]="page?.pageCurrent === 1"
+            (click)="requestPage(page.pageCurrent - 1)"
+          ><app-icon icon="left"></app-icon></button>
+
+          <button
+            [disabled]="page?.pageCurrent === page?.pageTotal"
+            (click)="requestPage(page.pageCurrent + 1)"
+          ><app-icon icon="right"></app-icon></button>
+
+          <button
+            [disabled]="page?.pageCurrent === page?.pageTotal"
+            (click)="requestPage(page.pageTotal)"
+          ><app-icon icon="double_right"></app-icon></button>
+        </div>
+      </div>
+    </ng-template>
+
+  </div>
+</div>

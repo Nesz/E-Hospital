@@ -4,8 +4,13 @@ import { forkJoin } from "rxjs";
 import { map, retry, tap } from "rxjs/operators";
 
 const ICONS = [
+  'assets/sort.svg',
   'assets/left.svg',
   'assets/right.svg',
+  'assets/logout.svg',
+  'assets/search.svg',
+  'assets/folder.svg',
+  'assets/settings.svg',
   'assets/double_left.svg',
   'assets/double_right.svg',
 ]

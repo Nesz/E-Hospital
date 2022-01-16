@@ -1,0 +1,18 @@
+@import "../../../variables";
+
+.content {
+  background: $color-dark-2;
+}
+
+.patient--props {
+  margin-bottom: 50px;
+  &__key {
+    text-align: left;
+    justify-content: left;
+    align-items: flex-start;
+    font-weight: bold;
+  }
+  &__value {
+
+  }
+}

@@ -3,7 +3,7 @@ import {
   AfterViewInit,
   Component, ComponentFactory, ComponentFactoryResolver, ComponentRef,
   ElementRef,
-  NgZone,
+  NgZone, OnDestroy,
   OnInit,
   QueryList, TemplateRef,
   ViewChild,
@@ -41,18 +41,13 @@ export interface CanvasDrawingArea {
   };
 }
 
-export interface IFrameData {
-  time: number;
-  delta: number;
-}
-
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
   selector: 'app-editor',
   templateUrl: './editor.component.html',
   styleUrls: ['./editor.component.scss'],
 })
-export class EditorComponent implements AfterViewInit, OnInit {
+export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   sidebarActive = false;
 
   shapes: {
@@ -85,7 +80,7 @@ export class EditorComponent implements AfterViewInit, OnInit {
   }>({ width: 0, height: 0 });
 
 
-  orientation = Orientations.DEFAULT;
+  orientation = Orientations.DEFAULT();
 
   private positionBuffer!: WebGLBuffer;
   private texCoordBuffer!: WebGLBuffer;
@@ -105,31 +100,37 @@ export class EditorComponent implements AfterViewInit, OnInit {
   ) {}
 
 
+  ngOnDestroy() {
+    this.context.getExtension('WEBGL_lose_context')?.loseContext();
+    this.canvases.forEach(x => x.destroy())
+  }
+
   ngOnInit() {
     const routeParams = this.route.snapshot.paramMap;
     const args = {
       patientId: routeParams.get('patientId')!,
       seriesId: routeParams.get('seriesId')!,
-      studyId: routeParams.get('studyId')!,
     };
 
     this.api
       .getSeriesMetadata(args)
       .pipe(mergeMap((series) => {
-        this.progress.full = series.instancesCount + 1;
+        this.progress.full = series.instances.length + 1;
+        console.log(series)
 
-        const $frames = series.instances.map(id =>
-          this.api.getDicomFrame({ ...args, instanceId: id })
+        const $frames = series.instances.map(instance =>
+          this.api.getInstanceStream(instance.id)
             .pipe(tap(() => this.progress.increment())));
 
         return forkJoin([
-          this.api.getDicomMetadata({ ...args, instanceId: series.instances[0] }),
+          this.api.getInstanceMeta(series.instances[0].id),
           ...$frames,
         ]);
       }))
       .pipe(tap(() => this.progressIndicator.label = 'Generating textures'), delay(300))
       .subscribe((response) => {
         const meta = response.shift() as Dicom;
+        console.log(meta)
         const frames = response as ArrayBuffer[];
 
         const width = meta.asNumber(Tag.WIDTH);
@@ -137,9 +138,12 @@ export class EditorComponent implements AfterViewInit, OnInit {
         const bitsPerPixel = meta.asNumber(Tag.BITS_PER_PIXEL);
         const sliceThickness = meta.asNumber(Tag.SLICE_THICKNESS);
         const pixelRepresentation = meta.asNumber(Tag.PIXEL_REPRESENTATION);
+        console.log(width)
+        console.log(height)
 
         this.setup(meta);
 
+        console.log(this.context)
         this.orientation = generateTextures({
           gl: this.context,
           buffers: frames,
@@ -213,11 +217,12 @@ export class EditorComponent implements AfterViewInit, OnInit {
   }
 
   getCanvasSliceBBox = (canvas: DOMRect, slice: DOMRect) => {
+    // webgl bb starts from down-left corner
     return {
-      width: slice.right - slice.left,
-      height: canvas.bottom - slice.top,
-      left: slice.left - canvas.left,
-      bottom: 0
+      x: slice.left - canvas.left,
+      y: canvas.bottom - slice.bottom,
+      width: slice.width,
+      height: slice.height,
     }
   }
 
@@ -227,7 +232,7 @@ export class EditorComponent implements AfterViewInit, OnInit {
     const canvasSlice = canvasPart.canvasPart;
     const canvas = this.canvas.nativeElement.getBoundingClientRect();
     const slice = canvasPart.canvas.nativeElement.getBoundingClientRect();
-    const { width, height, left, bottom } = this.getCanvasSliceBBox(canvas, slice);
+    const { width, height, x, y } = this.getCanvasSliceBBox(canvas, slice);
 
     const orientation = this.getOrientationSlices(canvasSlice.orientation);
     const texture = orientation.slices[canvasSlice.currentSlice];
@@ -236,8 +241,8 @@ export class EditorComponent implements AfterViewInit, OnInit {
     camera.updateViewProjection(width, height);
 
     gl.enable(gl.SCISSOR_TEST);
-    gl.viewport(left, bottom, width, height);
-    gl.scissor(left, bottom, width, height);
+    gl.viewport(x, y, width, height);
+    gl.scissor(x, y, width, height);
     gl.clearColor(0, 0, 0, 1);
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

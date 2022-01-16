@@ -2,66 +2,17 @@
   <app-sidebar> </app-sidebar>
 
   <div style="width: 100%" class="flex--column flex--centered__both">
-    <app-delayed-input
-      placeholder="Keyword filter"
-      (onChange)="onFilterChange($event)"
-    ></app-delayed-input>
+    <div class="content">
+      <app-delayed-input
+        placeholder="Keyword filter"
+        (onChange)="onFilterChange($event)"
+      ></app-delayed-input>
 
-    <div class=table>
-
-      <div class="table--column" *ngFor="let header of headers">
-        <div class="table--header" > {{ header }} </div>
-        <div
-          *ngFor="let user of page?.data; let index = index"
-          (mouseover)="rowHover = index"
-          (mouseout)="rowHover = -1"
-          [class.table--cell__hover] = "rowHover === index"
-          class="table--cell">
-          {{getField(index, header)}}
-        </div>
-      </div>
-
-      <div class="flex--break--row"></div>
-      <div class="table--footer">
-
-        <span class="table--footer__progress">
-          Page: {{ page?.pageCurrent }} / {{ page?.pageTotal }}
-        </span>
-
-        <span class="table--footer__pager">
-          <span>Items per page</span>
-          <select (change)="onSelect($event.target)" name="page-size">
-            <option value="5">5</option>
-            <option value="10" selected>10</option>
-            <option value="15">15</option>
-            <option value="20">20</option>
-          </select>
-
-          <span style="padding-left: 35px; box-sizing: border-box"></span>
-
-          <button
-            [disabled]="page?.pageCurrent === 1"
-            (click)="goToPage(1)"
-          ><app-icon icon="double_left"></app-icon></button>
-
-          <button
-            [disabled]="page?.pageCurrent === 1"
-            (click)="goToPage(page.pageCurrent - 1)"
-          ><app-icon icon="left"></app-icon></button>
-
-          <button
-            [disabled]="page?.pageCurrent === page?.pageTotal"
-            (click)="goToPage(page.pageCurrent + 1)"
-          ><app-icon icon="right"></app-icon></button>
-
-          <button
-            [disabled]="page?.pageCurrent === page?.pageTotal"
-            (click)="goToPage(page.pageTotal)"
-          ><app-icon icon="double_right"></app-icon></button>
-        </span>
-
-      </div>
-
+      <app-table #table
+        [headers]="headers"
+        (onRowClick)="goToPatient($event)"
+      ></app-table>
     </div>
+
   </div>
 </div>

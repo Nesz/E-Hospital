@@ -23,6 +23,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DicomParser\DicomParser\DicomParser.csproj" />
+      <ProjectReference Include="..\DicomViewer3\DicomViewer3.csproj" />
     </ItemGroup>
 
 </Project>

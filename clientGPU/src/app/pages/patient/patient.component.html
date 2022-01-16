@@ -1,0 +1,62 @@
+<div class="flex" style="flex: 0 0 auto;">
+  <app-sidebar> </app-sidebar>
+
+  <div style="width: 100%" class="flex--column flex--centered__both">
+    <div class="content">
+      <div class="flex--row">
+        <div class="patient--props width100">
+          <span>Patient Information</span>
+          <div>
+            <span class="patient--props__key">ID:</span>
+            <span class="patient--props__value"> {{ patient?.id }} </span>
+          </div>
+          <div>
+            <span class="patient--props__key">Email:</span>
+            <span class="patient--props__value"> {{ patient?.email }} </span>
+          </div>
+          <div>
+            <span class="patient--props__key">First Name:</span>
+            <span class="patient--props__value"> {{ patient?.firstName }} </span>
+          </div>
+          <div>
+            <span class="patient--props__key">Last Name:</span>
+            <span class="patient--props__value"> {{ patient?.lastName }} </span>
+          </div>
+          <div>
+            <span class="patient--props__key">Birth Date:</span>
+            <span class="patient--props__value"> {{ patient?.birthDate }} </span>
+          </div>
+          <div>
+            <span class="patient--props__key">Phone Number:</span>
+            <span class="patient--props__value"> {{ patient?.phoneNumber }} </span>
+          </div>
+          <div>
+            <span class="patient--props__key">Gender:</span>
+            <span class="patient--props__value"> {{ patient?.gender }} </span>
+          </div>
+        </div>
+
+        <div>
+          <input
+            (change)="filesChanged($event)"
+            type="file"
+            accept="*/dicom,.dcm, image/dcm, */dcm, .dicom"
+            multiple
+          >
+          <button
+            (click)="upload()"
+            class="upload-button width100">
+            Upload
+          </button>
+        </div>
+      </div>
+
+      <app-table #table
+                 [headers]="headers"
+                 (onRowClick)="goToSeries($event)"
+      ></app-table>
+    </div>
+  </div>
+
+
+</div>

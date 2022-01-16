@@ -1,10 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using MongoDB.Bson.IO;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace DicomViewer.Helpers
 {

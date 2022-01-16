@@ -11,6 +11,7 @@ import { HomeComponent } from "./pages/home/home.component";
 import { PatientsComponent } from "./pages/patients/patients.component";
 import { IconRegistryService } from "./services/icon-registry.service";
 import { NotAuthenticatedGuard } from "./guards/not-authenticated.guard";
+import { PatientComponent } from "./pages/patient/patient.component";
 
 const iconInitializer = (registry: IconRegistryService): (() => Promise<void>) => {
   return () =>
@@ -47,6 +48,11 @@ const routes: Routes = [
   {
     path: 'patients',
     component: PatientsComponent,
+    canActivate: [AuthenticationGuard],
+  },
+  {
+    path: 'patient/:patientId',
+    component: PatientComponent,
     canActivate: [AuthenticationGuard],
   },
   {

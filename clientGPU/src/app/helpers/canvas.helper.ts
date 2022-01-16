@@ -29,7 +29,7 @@ export const generateTextures = (args: {
     args.bitsPerPixel
   );
 
-  const response = Orientations.DEFAULT;
+  const response = Orientations.DEFAULT();
 
   response.z.width = args.width | 0;
   response.z.height = args.height | 0;
