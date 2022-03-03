@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace DicomParser
@@ -6,7 +7,7 @@ namespace DicomParser
     public class DicomItem
     {
         public string VR { get; }
-        public object Value { get; }
+        public object Value { get; set; }
 
         public DicomItem(string valueRepresentation, object value)
         {
@@ -19,6 +20,16 @@ namespace DicomParser
             return (List<byte[]>) Value;
         }
 
+        public DateTime GetAsDateTime()
+        {
+            return (DateTime) Value;
+        }
+        
+        public TimeSpan GetAsTimeSpan()
+        {
+            return (TimeSpan) Value;
+        }
+            
         public string GetAsString()
         {
             return (string) Value;

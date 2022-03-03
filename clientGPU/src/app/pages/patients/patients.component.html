@@ -1,0 +1,17 @@
+
+
+  <div style="width: 100%;height:calc(100vh - 44px)" class="flex--column flex--centered__both">
+    <div class="content">
+      <app-delayed-input
+        placeholder="Keyword filter"
+        (onChange)="onFilterChange($event)"
+      ></app-delayed-input>
+
+      <app-table #table
+        [headers]="headers"
+        (onRowClick)="goToPatient($event)"
+      ></app-table>
+    </div>
+
+  </div>
+

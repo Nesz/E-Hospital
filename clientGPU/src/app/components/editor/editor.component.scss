@@ -4,7 +4,7 @@
   position: absolute;
   background: $color1;
 
-  margin-left: 44px;
+  left: 44px;
   height: 44px;
   padding-left: 10px;
   padding-right: 10px;
@@ -41,12 +41,15 @@
     background: $color1;
 
     &--entry {
+      color: white;
       flex: 1;
       width: 44px;
       height: 44px;
       display: flex;
       margin: auto;
       position: relative;
+      justify-content: center;
+      align-items: center;
 
       &:hover {
         background: $color4;
@@ -58,20 +61,16 @@
       }
 
       &__icon {
-        padding: 10px;
+        width: 30px;
+        height: 30px;
         //border-radius: 5px;
-      }
-
-      &__reset {
-        position: absolute;
-        bottom: 0;
       }
 
       &__tooltip {
         white-space: nowrap;
         z-index: 999;
         height: 44px;
-        margin-left: 44px;
+        left: 44px;
         position: absolute;
         display: none;
         padding-left: 10px;
@@ -121,64 +120,6 @@
       border-bottom: 1px solid $color4;
     }
   }
-
-  &--measurements {
-    width: 250px;
-    min-width: 250px;
-    max-width: 250px;
-    background: $color1;
-    position:relative;
-    right: 0;
-    transition: 0.3s;
-    overflow: hidden;
-    white-space: nowrap;
-
-    &--wrapper {
-      min-width: 250px;
-      max-width: 250px;
-    }
-
-    &__hidden {
-      //transform: translateX(250px);
-      //transform: translate3d(150px, 0px, 0px);
-      width: 0;
-      min-width: 0;
-      max-width: 0;
-    }
-
-    &--header {
-      color: white;
-      padding: 10px;
-      text-align: center;
-      font-size: 1.225rem;
-      font-family: Bahnschrift;
-    }
-
-    &--hidden {
-      &>img {
-        transform: rotate(180deg);
-      }
-    }
-
-    &--hide-icon {
-      margin-left: auto;
-      height: 44px;
-      width: 44px;
-      border-radius: 5px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      &>img {
-        transition: 0.3s;
-        height: 32px;
-        width: 32px;
-      }
-      &:hover {
-        background: $color4;
-        cursor: pointer;
-      }
-    }
-  }
 }
 
 .editor {
@@ -194,6 +135,7 @@
     display: grid;
     grid-gap: 3px;
     grid-auto-flow: row;
+    box-sizing: border-box;
   }
 
   &--wrapper {
@@ -211,77 +153,6 @@
   bottom: 10px;
   left: 10px;
   user-select: none;
-}
-
-.measurement {
-  display: flex;
-  height: 44px;
-  width: 100%;
-  color: white;
-  font-size: 1.125rem;
-
-  &--active {
-    &>.measurement--index {
-      background: $color4;
-    }
-  }
-
-  &:hover {
-    cursor: pointer;
-    &> .measurement--index {
-      background: $color4;
-    }
-  }
-
-  &--index {
-    height: 44px;
-    width: 44px;
-    min-width: 44px;
-    text-align: center;
-    line-height: 44px;
-    user-select: none;
-  }
-
-  &--label {
-    background: $color1;
-    outline: none;
-    border: none;
-    color: white;
-    font-size: 1.125rem;
-    width: 80%;
-    height: 100%;
-  }
-
-  &--details {
-    margin-left: 10px;
-  }
-}
-
-.cine {
-  width: 150px;
-  margin-left: auto;
-  display: flex;
-  line-height: 30px;
-  color: #fff;
-
-  input {
-    top: 10px;
-    left: 10px;
-    width: 80px;
-  }
-
-  &--icon {
-    height: 22px;
-    width: 22px;
-    justify-content: center;
-    align-items: center;
-    vertical-align: middle;
-    display: inline-block;
-
-    &--wrapper {
-      cursor: pointer;
-    }
-  }
 }
 
 .loading {

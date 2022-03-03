@@ -1,0 +1,77 @@
+<div class="center">
+
+  <div class="form--wrapper">
+    <div class="form-type">
+      <span (click)="isSignInForm = true"
+            [class.form-type--entry__active]="isSignInForm"
+            class="form-type--entry">sign in</span>
+      <span (click)="isSignInForm = false"
+            [class.form-type--entry__active]="!isSignInForm"
+            class="form-type--entry">sign up</span>
+    </div>
+
+    <form class="form" [formGroup]="signInForm" (ngSubmit)="signIn()" *ngIf="isSignInForm">
+      <span class="labeled--input">
+        <input [class.invalid]="isInvalid(signInForm, 'email')" formControlName="email" />
+        <span class="labeled--input__label">Email</span>
+      </span>
+
+      <span class="labeled--input">
+        <input type="password" [class.invalid]="isInvalid(signInForm, 'password')" formControlName="password" />
+        <span class="labeled--input__label">Password</span>
+      </span>
+
+      <button type="submit">sign in</button>
+    </form>
+
+    <form class="form" [formGroup]="signUpForm" (ngSubmit)="signUp()" *ngIf="!isSignInForm">
+        <div class="flex--row">
+          <span class="labeled--input">
+            <input [class.invalid]="isInvalid(signUpForm, 'firstName')" formControlName="firstName"/>
+            <span class="labeled--input__label">First Name</span>
+          </span>
+          <span class="labeled--input">
+            <input [class.invalid]="isInvalid(signUpForm, 'lastName')" formControlName="lastName"/>
+            <span class="labeled--input__label">Last Name</span>
+          </span>
+        </div>
+        <div class="flex--row">
+          <span class="labeled--input">
+            <input [class.invalid]="isInvalid(signUpForm, 'email')"  formControlName="email" />
+            <span class="labeled--input__label">Email</span>
+          </span>
+          <span class="labeled--input">
+            <input [class.invalid]="isInvalid(signUpForm, 'phoneNumber')"  formControlName="phoneNumber"/>
+            <span class="labeled--input__label">Phone Number</span>
+          </span>
+        </div>
+        <div class="flex--row">
+          <span class="labeled--input">
+            <input [class.invalid]="isInvalid(signUpForm, 'birthDate')" formControlName="birthDate" type="date" />
+            <span class="labeled--input__label">Birth Date</span>
+          </span>
+          <span class="labeled--input">
+            <select [class.invalid]="isInvalid(signUpForm, 'gender')" formControlName="gender" name="gender">
+              <option value="" disabled selected>-</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+            <span class="labeled--input__label">Gender</span>
+          </span>
+        </div>
+      <div class="flex--row">
+        <span class="labeled--input">
+          <input type="password" [class.invalid]="isInvalid(signUpForm, 'password')" formControlName="password"/>
+          <span class="labeled--input__label">Password</span>
+        </span>
+        <span class="labeled--input">
+          <input type="password" [class.invalid]="isInvalid(signUpForm, 'repassword')" formControlName="repassword"/>
+          <span class="labeled--input__label">Retype password</span>
+        </span>
+      </div>
+
+      <button type="submit">sign up</button>
+    </form>
+
+  </div>
+</div>

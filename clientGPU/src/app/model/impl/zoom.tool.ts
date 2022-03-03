@@ -1,13 +1,13 @@
-import { Tool } from '../tool';
 import { EditorComponent } from '../../components/editor/editor.component';
 import { mat3, vec2 } from 'gl-matrix';
 import { CanvasPartComponent } from "../../components/canvas-part/canvas-part.component";
+import { Tool } from "../interfaces";
 
 export class ZoomTool implements Tool {
   private readonly minZoom = 0.25;
   private readonly maxZoom = 20;
 
-  public readonly toolIcon = 'assets/zoom.svg';
+  public readonly toolIcon = 'zoom';
   public readonly toolName = 'Zoom';
   public readonly extraOptions = [];
 

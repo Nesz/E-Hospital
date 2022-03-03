@@ -1,1 +1,37 @@
-<div class="toolbar"></div>
+<div class="navbar">
+  <span class="navbar--main">E-Hospital</span>
+
+  <ng-container *ngIf="user">
+    <div class="navbar--items">
+      <div *ngIf="role.Patient !== user?.role" routerLink="/patients" class="navbar--item">
+        <span class="navbar--item__icon">
+          <app-icon icon="search"></app-icon>
+        </span>
+        <span class="navbar--item__text">Find Patient</span>
+      </div>
+
+      <div *ngIf="role.Patient === user?.role" (click)="goToPatient()" class="navbar--item">
+        <span class="navbar--item__icon">
+          <app-icon icon="folder"></app-icon>
+        </span>
+        <span class="navbar--item__text">My Files</span>
+      </div>
+
+      <div class="navbar--user">
+          <app-icon class="navbar--user__avatar" icon="user"></app-icon>
+          <span class="navbar--user__name">{{user?.firstName + ' ' + user?.lastName}}</span>
+          <app-icon #more (click)="on()" class="navbar--user__more-icon" icon="triangle"></app-icon>
+          <div class="user-menu" *ngIf="isUserMenuEnabled" (clickOutside)="off($event)">
+            <div class="user-menu--item">
+              <app-icon class="user-menu--item__icon" icon="settings"></app-icon>
+              <span class="user-menu--item__label">Settings</span>
+            </div>
+            <div class="user-menu--item">
+              <app-icon class="user-menu--item__icon" icon="logout"></app-icon>
+              <span class="user-menu--item__label" (click)="logout()">Logout</span>
+            </div>
+          </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

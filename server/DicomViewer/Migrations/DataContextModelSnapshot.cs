@@ -32,8 +32,8 @@ namespace DicomViewer.Migrations
                     b.Property<string>("MongoId")
                         .HasColumnType("text");
 
-                    b.Property<string>("PatientId")
-                        .HasColumnType("text");
+                    b.Property<long>("PatientId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("SeriesId")
                         .HasColumnType("text");
@@ -85,6 +85,9 @@ namespace DicomViewer.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");

@@ -31,6 +31,5 @@ export class Program {
         gl.uniform4f(location, value[0], value[1], value[2], value[3]);
       }
     }
-}
-
+  }
 }

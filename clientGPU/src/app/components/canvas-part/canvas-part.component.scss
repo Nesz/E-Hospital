@@ -7,6 +7,8 @@
   box-sizing: border-box;
   height: 100%;
   z-index: 1;
+  display: flex;
+  flex-flow: column;
 
   &--slider {
     height: 100%;
@@ -47,6 +49,8 @@
     display: flex;
     margin-left: 10px;
     margin-right: 10px;
+    justify-content: center;
+    align-items: center;
 
     &__wrapper {
       line-height: 30px;
@@ -56,5 +60,54 @@
       color: white;
       border-bottom: 1px solid $color4;
     }
+
+    input, select, option {
+      outline: none;
+      background: black;
+      color: #fff;
+      border: 1px solid #12a5a4;
+      border-radius: 5px;
+    }
+
+    input {
+      width: 100px;
+    }
+
+    select {
+      height: 20px;
+    }
   }
+}
+
+.setting {
+  margin-left: 10px;
+  span {
+    margin-right: 5px;
+  }
+  & > input {
+    width: 50px;
+  }
+}
+
+.debug {
+  position: absolute;
+  z-index: 1;
+  bottom: 0;
+  left: 10px;
+  &__text {
+    color: white;
+    font-size: 1.5rem;
+    text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+  }
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
 }

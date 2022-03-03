@@ -1,124 +1,56 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using DicomViewer.Dtos;
+using DicomViewer.Dtos.Request;
 using DicomViewer.Entities;
 using DicomViewer.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DicomViewer.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [DisableRequestSizeLimit]
     public class DicomController : ControllerBase
     {
         
-        private readonly DicomService _dicomService;
+        private readonly IDicomService _dicomService;
 
-        public DicomController(DicomService dicomService)
+        public DicomController(IDicomService dicomService)
         {
             _dicomService = dicomService;
         }
 
-        [HttpGet]
-        public async Task<IEnumerable<DicomMeta>> GetDicomList()
+        [HttpGet("{patientId:long}")]
+        public async Task<IEnumerable<StudyMetadata>> GetStudiesMetadata(long patientId)
         {
-           return await _dicomService.GetList();
+           return await _dicomService.GetStudiesMetadata(patientId);
         }
 
         [HttpGet("{patientId}/{studyId}/{seriesId}/{instanceId:int}/frame")]
-        public async Task<Stream> GetFrameInstance(string patientId, string studyId, string seriesId, int instanceId)
+        public async Task<Stream> GetSlice([FromRoute] SliceRequest request)
         {
-            return await _dicomService.GetFrameData(studyId, seriesId, instanceId);
+            return await _dicomService.GetSlice(request);
         }
 
         [HttpGet("{patientId}/{studyId}/{seriesId}/{instanceId:int}/meta")]
-        public async Task<dynamic> GetMetadata(string patientId, string studyId, string seriesId, int instanceId)
+        public async Task<dynamic> GetSliceMetadata([FromRoute] SliceMetadataRequest request)
         {
-            return await _dicomService.GetFrameMetadata(studyId, seriesId, instanceId);
+            return await _dicomService.GetSliceMetadata(request);
         }
         
         [HttpGet("{patientId}/{studyId}/{seriesId}")]
-        public async Task<dynamic> GetMetadataa(string patientId, string studyId, string seriesId)
+        public async Task<dynamic> GetSeriesMetadata([FromRoute] SeriesMetadataRequest request)
         {
-            return await _dicomService.GetSeriesMetadata(studyId, seriesId);
+            return await _dicomService.GetSeriesMetadata(request);
         }
 
-        [HttpPost]
-        public async Task UploadDicom([FromForm(Name = "file[]")] IFormFile[] files)
+        [HttpPost("{patientId}")]
+        public async Task UploadDicom([FromForm] SaveFilesRequest request)
         {
-            await _dicomService.SaveFiles(files);
+            await _dicomService.SaveFiles(request);
         }
- 
- 
- /*[HttpPost("1")]
-
- [HttpPost]
- public Dicom SparseDicom([FromForm(Name ="file")] IFormFile file)
- {
-     var parser = DicomParse.GetDefaultParser();
-
-     var files = Request.Form.Files;
-
-     using (var stream = files[0].OpenReadStream())
-     {
-         var a = parser.Parse(stream);
-
-         var dm = new DicomMetadata()
-         {
-             entries = BsonDocument.Parse(JsonSerializer.Serialize(a.Entries)),
-             preamble = a.Preamble,
-             prefix = a.Prefix
-         };
-         
-         dm = _metadataService.Save(dm);
-
-         var dk = new Dikom()
-         {
-             MongoId = dm.Id,
-             PatientId = (string)a.Entries["00100020"].Value,
-             SeriesId = (string)a.Entries["0020000E"].Value,
-             StudyId = (string)a.Entries["0020000D"].Value,
-             InstanceId = Convert.ToInt32((uint)a.Entries["00200013"].Value),
-         };
-         
-         //Console.WriteLine(JsonSerializer.Serialize(dk));
-         _dataContext.Dikoms.Add(dk);
-         _dataContext.SaveChanges();
-         
-
-         /* using (var img = Image.FromStream(stream))
-         {
-             var path = "C:\\Users\\Filip\\RiderProjects\\ConsoleApp2\\ConsoleApp2\\xd.png";
-             img.Save(path, ImageFormat.Png);
-         } */
-                
-                /*System.IO.File.WriteAllBytes(
-                    "C:\\Users\\Filip\\RiderProjects\\ConsoleApp2\\ConsoleApp2\\xd.jpg", 
-                    a.Entries["7FE00010"].GetAsListBytes()[0]
-                );*/
-
-                //return a;
-                /*var parsed = parser.Parse(ReadFully(stream));
-                return parsed;
-                var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(parsed));
-                using (var msi = new MemoryStream(bytes))
-                using (var mso = new MemoryStream())
-                {
-                    using (var gs = new GZipStream(mso, CompressionMode.Compress))
-                    {
-                        msi.CopyTo(gs);
-                    }
-                    //Response.Headers.Add("Content-Encoding", "gzip");
-                    Response.Body.WriteAsync(mso.ToArray());
-                }*/
-
-
-            //}
-        //}
+        
     }
 }

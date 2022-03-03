@@ -8,6 +8,30 @@ html, body {
 
 }
 
+.width100 {
+  width: 100%;
+}
+
 .flex {
   display: flex;
+  &--column {
+    display: flex;
+    flex-flow: column;
+  }
+  &--row {
+    display: flex;
+    flex-flow: row;
+  }
+  &--centered {
+    &__vertically {
+      justify-content: center;
+    }
+    &__horizontally {
+      align-items: center;
+    }
+    &__both {
+      justify-content: center;
+      align-items: center;
+    }
+  }
 }

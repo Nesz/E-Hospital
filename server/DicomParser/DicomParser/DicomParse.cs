@@ -91,9 +91,8 @@ namespace DicomParser
                 stream.GoBack(2);
                 return (_parsers[DEFAULT_ATTRIBS[attrib]], false);
             }
-                  stream.GoBack(2);
+            stream.GoBack(2);
             return (_parsers["UN"], false);
-            throw new IOException("zjebales sprawe ziomus");
         }
         
         public Dicom Parse(string filename)

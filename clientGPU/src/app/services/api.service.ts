@@ -1,24 +1,31 @@
 import { Injectable } from '@angular/core';
 import { Dicom, request } from '../model/dicom';
-import { Observable, Subject } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { HttpClient, HttpEvent, HttpRequest } from "@angular/common/http";
 import { map } from 'rxjs/operators';
+import { Shape, User } from "../model/interfaces";
+import { OrderDirection, Page, Role } from "../model/enums";
 
-export interface DicomMeta {
+export interface Series {
   id: number;
-  patientId: string;
-  studyId: string;
-  seriesId: string;
-  instanceId: number;
-  mongoId: string;
+  originalId: string;
+  description: string;
+  modality: string;
+  date: string;
+  study: Study
+  instances: Instance[];
 }
 
-export interface SeriesMeta {
-  patientId: string;
-  studyId: string;
-  seriesId: string;
-  instancesCount: number;
-  instances: number[];
+export interface Instance {
+  id: number;
+  originalId: string;
+}
+
+export interface Study {
+  id: number;
+  originalId: string;
+  description: string;
+  date: string;
 }
 
 @Injectable({
@@ -27,29 +34,18 @@ export interface SeriesMeta {
 export class ApiService {
   constructor(private readonly http: HttpClient) {}
 
-  public getDicomFrame(args: {
-    patientId: string;
-    studyId: string;
-    seriesId: string;
-    instanceId: number;
-  }): Observable<ArrayBuffer> {
+  public getInstanceStream(instanceId: number): Observable<ArrayBuffer> {
     return this.http.get(
-      `https://localhost:5001/dicom/${args.patientId}/${args.studyId}/${args.seriesId}/${args.instanceId}/frame`,
+      `https://localhost:5001/api/instances/${instanceId}`,
       {
         responseType: 'arraybuffer',
       }
     );
   }
 
-  public getDicomMetadata(args: {
-    patientId: string;
-    studyId: string;
-    seriesId: string;
-    instanceId: number;
-  }) {
-    return this.http
-      .get<request>(
-        `https://localhost:5001/dicom/${args.patientId}/${args.studyId}/${args.seriesId}/${args.instanceId}/meta`
+  public getInstanceMeta(instanceId: number) {
+    return this.http.get<request>(
+        `https://localhost:5001/api/instances/${instanceId}/meta`
       )
       .pipe(
         map((x) => {
@@ -58,13 +54,64 @@ export class ApiService {
       );
   }
 
-  public getSeriesMetadata(args: { patientId: string; studyId: string; seriesId: string }) {
-    return this.http.get<SeriesMeta>(
-      `https://localhost:5001/dicom/${args.patientId}/${args.studyId}/${args.seriesId}`
+  public getSeriesMetadata(args: { patientId: string; seriesId: string }) {
+    return this.http.get<Series>(
+      `https://localhost:5001/api/series/${args.patientId}/${args.seriesId}`
     );
   }
 
-  public getList(): Observable<DicomMeta[]> {
-    return this.http.get<DicomMeta[]>('https://localhost:5001/WeatherForecast');
+  public uploadFiles(patientId: string, files: File[]): Observable<HttpEvent<any>> {
+    const formData: FormData = new FormData();
+    files.forEach(file => formData.append('files', file));
+    const req = new HttpRequest('POST', `https://localhost:5001/api/dicom/${patientId}`, formData,
+      {
+        reportProgress: true
+      });
+    //return this.http.post<HttpEvent<any>>(`https://localhost:5001/api/dicom/${patientId}`, formData, {
+    //  reportProgress: true
+    //})
+    return this.http.request(req);
+  }
+
+  public getSeriesList(patientId: string, pageNumber: number, pageSize: number) {
+    return this.http.get<Page<Series>>(
+      `https://localhost:5001/api/series/${patientId}`, {
+        params: {
+          pageNumber: pageNumber,
+          pageSize: pageSize
+        }
+      }
+    );
+  }
+
+  public addArea(seriesId: string, shape: Shape) {
+    return this.http.post(`https://localhost:5001/api/series/${seriesId}/area`, {
+      label: shape.label,
+      orientation: shape.orientation,
+      slice: shape.slice,
+      vertices: shape.vertices.map(x => x | 0)
+    })
+  }
+
+  public getAreas(seriesId: string) {
+    return this.http.get<Shape[]>(`https://localhost:5001/api/series/${seriesId}/area`)
+  }
+
+  public getPatientsList(args: {
+    pageNumber: number,
+    pageSize: number,
+    pageOrder: string,
+    orderDirection: OrderDirection,
+    keyFilter: string,
+    roleFilter: Role
+  }) {
+    console.log(args)
+    return this.http.get<Page<User>>('https://localhost:5001/api/user', {
+      params: args
+    });
+  }
+
+  getUser(patientId: string) {
+    return this.http.get<User>(`https://localhost:5001/api/user/${patientId}`);
   }
 }

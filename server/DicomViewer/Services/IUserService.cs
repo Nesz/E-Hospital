@@ -1,8 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using DicomViewer.Dtos;
+using DicomViewer.Dtos.Request;
+using DicomViewer.Dtos.Response;
 using DicomViewer.Entities;
-using DicomViewer.Entities.Dtos.Request;
-using DicomViewer.Entities.Dtos.Response;
 
 namespace DicomViewer.Services
 {
@@ -19,5 +20,9 @@ namespace DicomViewer.Services
         public Task<SignInResponseDto> SignIn(SignInRequestDto request);
         
         public Task<UserDto> GetCurrentUser();
+
+        public Task<UserDto> GetUser(long patientId);
+        
+        Task<Page<UserDto>> GetUsersList(UserPageRequest request);
     }
 }

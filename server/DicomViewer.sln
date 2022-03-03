@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DicomViewer", "DicomViewer\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DicomParser", "DicomParser\DicomParser\DicomParser.csproj", "{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DicomViewer3", "DicomViewer3\DicomViewer3.csproj", "{A62DFFE7-6F18-4ABB-8BA9-2A06CAED2F0D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A62DFFE7-6F18-4ABB-8BA9-2A06CAED2F0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A62DFFE7-6F18-4ABB-8BA9-2A06CAED2F0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A62DFFE7-6F18-4ABB-8BA9-2A06CAED2F0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A62DFFE7-6F18-4ABB-8BA9-2A06CAED2F0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

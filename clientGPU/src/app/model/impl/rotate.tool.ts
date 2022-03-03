@@ -1,11 +1,11 @@
-import { Tool } from '../tool';
 import { EditorComponent } from '../../components/editor/editor.component';
 import { mat3, vec2 } from 'gl-matrix';
 import { Camera } from '../camera';
 import { CanvasPartComponent } from "../../components/canvas-part/canvas-part.component";
+import { Tool } from "../interfaces";
 
 export class RotateTool implements Tool {
-  public readonly toolIcon = 'assets/rotate.svg';
+  public readonly toolIcon = 'rotate';
   public readonly toolName = 'Rotate';
   public readonly extraOptions = [];
 

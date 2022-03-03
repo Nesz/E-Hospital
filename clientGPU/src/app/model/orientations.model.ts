@@ -17,21 +17,23 @@ export interface Orientations {
 }
 
 export class Orientations {
-  public static readonly DEFAULT: Orientations = {
-    x: {
-      width: 0,
-      height: 0,
-      slices: [],
-    },
-    y: {
-      width: 0,
-      height: 0,
-      slices: [],
-    },
-    z: {
-      width: 0,
-      height: 0,
-      slices: [],
-    },
-  };
+  public static DEFAULT(): Orientations {
+    return {
+      x: {
+        width: 0,
+        height: 0,
+        slices: [],
+      },
+      y: {
+        width: 0,
+        height: 0,
+        slices: [],
+      },
+      z: {
+        width: 0,
+        height: 0,
+        slices: [],
+      },
+    }
+  }
 }

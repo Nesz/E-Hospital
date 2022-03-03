@@ -5,7 +5,6 @@ import {
   EventEmitter,
   Input,
   NgZone, OnDestroy,
-  OnInit,
   Output,
   ViewChild
 } from "@angular/core";
@@ -16,7 +15,7 @@ import { CanvasDrawingArea, EditorComponent } from "../editor/editor.component";
   templateUrl: './canvas-part.component.html',
   styleUrls: ['./canvas-part.component.scss']
 })
-export class CanvasPartComponent implements OnInit, AfterViewInit, OnDestroy {
+export class CanvasPartComponent implements AfterViewInit, OnDestroy {
   editor!: EditorComponent;
   isRendered = false;
   @ViewChild('canvas') canvas!: ElementRef<HTMLDivElement>
@@ -36,21 +35,13 @@ export class CanvasPartComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly zone: NgZone
   ) { }
 
-  ngOnInit(): void {
-
-  }
-
   ngOnDestroy(): void {
-    console.log("destroy")
     this.whenDestroyed();
   }
 
-
-
   ngAfterViewInit() {
-    const observer = new ResizeObserver((entries) => {
+    const observer = new ResizeObserver((_) => {
       this.zone.run(() => {
-        console.log("resize")
         this.resetPosition();
         this.onResize.emit(this);
       });
@@ -60,34 +51,26 @@ export class CanvasPartComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isRendered = true;
   }
 
-  randomId() {
-    let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const charactersLength = characters.length;
-    for (let i = 0; i < 6; ++i ) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    console.log(result)
-    return result;
-  }
+  getWidth = () =>
+    this.editor.getOrientationSlices(this.canvasPart.orientation).width;
+
+  getHeight = () =>
+    this.editor.getOrientationSlices(this.canvasPart.orientation).height;
 
   resetPosition = () => {
     const bbox = this.canvas?.nativeElement?.getBoundingClientRect();
+    if (bbox) {
+      const [scale, offX, offY] = this.calculateAspectRatio({
+        width: bbox.width,
+        height: bbox.height,
+        elWidth: this.editor.orientation[this.canvasPart.orientation].width,
+        elHeight: this.editor.orientation[this.canvasPart.orientation].height,
+      });
 
-    if (!bbox) {
-      return
+      this.canvasPart.camera.zoom = scale;
+      this.canvasPart.camera.x = -offX;
+      this.canvasPart.camera.y = -offY;
     }
-    console.log(bbox)
-    const [scale, offX, offY] = this.calculateAspectRatio({
-      width: bbox.width,
-      height: bbox.height,
-      elWidth: this.editor.orientation.z.width,
-      elHeight: this.editor.orientation.z.height,
-    });
-
-    this.canvasPart.camera.zoom = scale;
-    this.canvasPart.camera.x = -offX;
-    this.canvasPart.camera.y = -offY;
   }
 
   calculateAspectRatio = (dimensions: {
@@ -123,4 +106,15 @@ export class CanvasPartComponent implements OnInit, AfterViewInit, OnDestroy {
     this.canvasPart.currentSlice = Number(($event.target as HTMLInputElement).value);
     this.onSliceChange.emit(this);
   }
+
+  windowingChanged(type: string, $event: Event) {
+    const newVal = Number(($event.target as HTMLInputElement).value);
+    if (type === 'wc')
+      this.canvasPart.windowing[type] = newVal;
+    else
+      this.canvasPart.windowing.ww = newVal;
+
+    this.editor.render(this);
+  }
+
 }

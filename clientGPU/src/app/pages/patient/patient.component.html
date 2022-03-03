@@ -1,0 +1,53 @@
+<div style="width: 100%;height:calc(100vh - 44px)" class="flex--column flex--centered__both">
+  <div class="content">
+    <span class="header">Patient Information</span>
+    <app-table #table2
+               [displayControls]="false"
+               [headers]="headers_patient"
+    ></app-table>
+
+    <div style="margin-top: 100px"></div>
+
+    <div class="flex--row">
+      <span class="header">Patient Medical Files</span>
+      <div class="upload" *ngIf="role.Patient !== currentUser?.role">
+        <div style="display: contents" *ngIf="!isBeingUploaded">
+          <label class="choose-button">
+            <span>{{ getFilesText() }}</span>
+            <input
+              #filesInput
+              (change)="filesChanged($event)"
+              type="file"
+              accept="*/dicom,.dcm, image/dcm, */dcm, .dicom"
+              multiple
+            >
+          </label>
+          <button
+            [disabled]="files?.length === 0"
+            (click)="upload()"
+            class="upload-button tooltip--element">
+            <app-icon icon="upload"></app-icon>
+            <span class="tooltip">
+              {{ files?.length === 0 ? 'Add files to upload' : 'Upload' }}
+            </span>
+          </button>
+        </div>
+        <div
+          class="loader"
+          [style.display] = "isBeingUploaded ? 'block' : 'none'"
+        >
+          <div
+            [style.width] = "uploadProgress +'%'"
+            class="loader--progress">
+          </div>
+          <span class="loader--progress--text">{{ uploadProgress + '%' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <app-table #table
+               [headers]="headers"
+               (onRowClick)="goToSeries($event)"
+    ></app-table>
+  </div>
+</div>
