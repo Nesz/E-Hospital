@@ -1,19 +1,4 @@
-import { Dicom } from '../model/dicom';
-import { Tag } from '../tag';
-import { Windowing } from '../model/windowing';
-import { Shape, ShapeType } from '../model/shape';
-import { ProgressRingComponent } from '../components/progress-ring/progress-ring.component';
 import { Orientations } from '../model/orientations.model';
-
-export const base64ToUint8ArrayBuffer = (base64: string) => {
-  const binary_string = window.atob(base64);
-  const len = binary_string.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binary_string.charCodeAt(i);
-  }
-  return bytes;
-};
 
 export const generateTextures = (args: {
   gl: WebGL2RenderingContext;
@@ -106,19 +91,22 @@ export const allocBufferView = (type: string, size: number) => {
   if (type === 'int16') {
     return new Int16Array(size);
   }
-  throw '';
+  if (type === 'uint16') {
+    return new Uint16Array(size);
+  }
+  throw `unknown type '${type}' cannot allocate buffer`;
 };
 
 export const getView = (buffer: ArrayBuffer, type: string) => {
   if (type === 'int16') {
     return new Int16Array(buffer);
   }
-  throw '';
+  if (type === 'uint16') {
+    return new Uint16Array(buffer);
+  }
+  throw `unknown type '${type}' cannot get view`;
 };
 
-export const executeAsync = (func: () => void) => {
-  setTimeout(func, 0);
-};
 export const generateTexture = (args: {
   gl: WebGL2RenderingContext;
   format: number;
@@ -194,146 +182,9 @@ export const getEnumsFor = (
         'uint8',
       ];
   }
-  throw '';
-};
-
-export const storedPixelDataToImageData = (image: Int16Array, width: number, height: number) => {
-  const pixelData = image;
-  const numberOfChannels = 3;
-  const data = new Uint8Array(width * height * numberOfChannels);
-  let offset = 0;
-
-  for (let i = 0; i < pixelData.length; i++) {
-    const val = Math.abs(pixelData[i]);
-
-    data[offset++] = val & 0xff;
-    data[offset++] = val >> 8;
-    data[offset++] = pixelData[i] < 0 ? 0 : 1; // 0 For negative, 1 for positive
-  }
-  return data;
-};
-
-export const touf9 = (dicom: Dicom, buffer: ArrayBuffer) => {
-  const pixelRepresentation = dicom.getValue(Tag.PIXEL_REPRESENTATION).asNumber();
-  const bitsPerPixel = dicom.getValue(Tag.BITS_PER_PIXEL).asNumber();
-  const height = dicom.getValue(Tag.HEIGHT).asNumber();
-  const width = dicom.getValue(Tag.WIDTH).asNumber();
-
-  if (bitsPerPixel == 16) {
-    if (pixelRepresentation == 1) {
-      const numberOfChannels = 3;
-      const view = new Int16Array(buffer);
-      const data = new Uint8Array(width * height * numberOfChannels);
-      let offset = 0;
-
-      for (let i = 0; i < view.length; i++) {
-        const val = Math.abs(view[i]);
-
-        data[offset++] = val & 0xff;
-        data[offset++] = val >> 8;
-        data[offset++] = view[i] < 0 ? 0 : 1; // 0 For negative, 1 for positive
-      }
-
-      return ['int16', WebGLRenderingContext.RGB, data];
-    }
-
-    if (pixelRepresentation == 0) {
-      const numberOfChannels = 2;
-      const view = new Uint16Array(buffer);
-      const data = new Uint8Array(width * height * numberOfChannels);
-      let offset = 0;
-
-      for (let i = 0; i < view.length; i++) {
-        const val = view[i];
-
-        data[offset++] = val & 0xff;
-        data[offset++] = val >> 8;
-      }
-
-      return ['uint16', WebGLRenderingContext.RGB, data];
-    }
-  }
-
-  if (bitsPerPixel == 8) {
-    if (pixelRepresentation == 1) {
-    }
-  }
-
-  return null;
-};
-
-export const getImageData = (dicom: Dicom, windowing: Windowing, buffer: ArrayBuffer) => {
-  const pixelRepresentation = dicom.getValue(Tag.PIXEL_REPRESENTATION).asNumber();
-  const transferSyntax = dicom.getValue(Tag.TRANSFER_SYNTAX).asString();
-  const entryWidth = dicom.getValue(Tag.WIDTH).asNumber();
-  const entryHeight = dicom.getValue(Tag.HEIGHT).asNumber();
-  const bitsPerPixel = dicom.getValue(Tag.BITS_PER_PIXEL).asNumber();
-  const bitsStored = dicom.getValue(Tag.BITS_STORED).asNumber();
-  const slope = dicom.getValue(Tag.SLOPE).asNumber();
-  const intercept = dicom.getValue(Tag.INTERCEPT).asNumber();
-
-  const start = new Date().getMilliseconds();
-  const dstBmp = new Uint8ClampedArray(entryWidth * entryHeight * 4);
-
-  return new ImageData(dstBmp, entryWidth, entryHeight);
+  throw `Unknown or not supported configuration BPP: '${bitsPerPixel}', PR: '${pixelRepresentation}'`;
 };
 
 export const isInsideBoundsBBox = (x: number, y: number, bbox: DOMRect) => {
   return x > bbox.x && x < bbox.x + bbox.width && y > bbox.y && y < bbox.y + bbox.height;
-};
-
-export const isInsideBounds = (args: {
-  x: number;
-  y: number;
-  boundX: number;
-  boundY: number;
-  width: number;
-  height: number;
-}) => {
-  return (
-    args.x > args.boundX &&
-    args.x < args.boundX + args.width &&
-    args.y > args.boundY &&
-    args.y < args.boundY + args.height
-  );
-};
-
-export enum Side {
-  LEFT_TOP,
-  LEFT_BOT,
-  RIGHT_TOP,
-  RIGHT_BOT,
-}
-export const isAtPoint = (args: {
-  clientX: number;
-  clientY: number;
-  radius: number;
-  shape: Shape;
-}) => {
-  const dots = [
-    [args.shape.x, args.shape.y, Side.LEFT_TOP], // left top
-    [args.shape.x, args.shape.y + args.shape.h, Side.LEFT_BOT], // left bot
-    [args.shape.x + args.shape.w, args.shape.y, Side.RIGHT_TOP], // right top
-    [args.shape.x + args.shape.w, args.shape.y + args.shape.h, Side.RIGHT_BOT], // right bot
-  ];
-
-  for (const dot of dots) {
-    const [x, y, side] = dot;
-    const distanceSquared =
-      (args.clientX - x) * (args.clientX - x) + (args.clientY - y) * (args.clientY - y);
-    if (distanceSquared <= args.radius * args.radius) {
-      return [x, y, side];
-    }
-  }
-  return null;
-};
-
-export const orientShape = (shape: Shape) => {
-  const px = Math.min(shape.x, shape.x + shape.w);
-  const py = Math.min(shape.y, shape.y + shape.h);
-
-  shape.x = px;
-  shape.y = py;
-  shape.w = Math.abs(shape.w);
-  shape.h = Math.abs(shape.h);
 };

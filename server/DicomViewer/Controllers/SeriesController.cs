@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using DicomViewer.Dtos.Request;
 using DicomViewer3.Dtos;
+using DicomViewer3.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DicomViewer.Controllers

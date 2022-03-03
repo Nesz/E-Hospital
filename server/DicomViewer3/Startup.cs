@@ -1,11 +1,13 @@
 using System;
 using System.ComponentModel;
 using System.Text;
+using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.Internal;
 using DicomViewer3.Data;
 using DicomViewer3.Entities;
 using DicomViewer3.Helpers;
+using DicomViewer3.Hubs;
 using DicomViewer3.Middleware;
 using DicomViewer3.Repositories;
 using DicomViewer3.Repositories.Impl;
@@ -49,6 +51,8 @@ namespace DicomViewer3
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Secret"]));
             var mapperConfig = new MapperConfiguration(mc => mc.AddProfile(new MappingProfile()));
 
+            services.AddSignalR();
+            
             services
                 .AddHttpContextAccessor()
                 .AddSingleton(mapperConfig.CreateMapper())
@@ -82,6 +86,19 @@ namespace DicomViewer3
                         ValidateAudience = false,
                         ValidateIssuer = false,
                         ValidateLifetime = true
+                    };
+                    opt.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            
+                            if (!string.IsNullOrEmpty(accessToken))
+                            {
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        }
                     };
                 });
 
@@ -121,7 +138,7 @@ namespace DicomViewer3
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "DicomViewer v1"));
             }
             
-            app.UseCors("MyAllowSpecificOrigins");
+            //app.UseCors("MyAllowSpecificOrigins");
 
 
             app.UseMiddleware<ErrorHandlingMiddleware>();
@@ -137,7 +154,11 @@ namespace DicomViewer3
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapHub<ProgressHub>("/progresshub");
+            });
         }
     }
 }

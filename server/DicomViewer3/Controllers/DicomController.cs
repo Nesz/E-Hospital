@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using DicomViewer3.Dtos;
+using DicomViewer3.Helpers;
 using DicomViewer3.Models;
 using DicomViewer3.Services;
 using Microsoft.AspNetCore.Http;
@@ -24,7 +27,19 @@ namespace DicomViewer3.Controllers
         [HttpPost("{patientId:long}")]
         public async Task UploadDicom([FromRoute] long patientId, [FromForm] IFormFile[] files)
         {
-            await _dicomService.SaveFiles(patientId, files);
+            var generatedGuid = Guid.NewGuid();
+            HttpContext.Response.StatusCode = 202;
+            await HttpContext.Response.WriteAsync(JsonSerializer.Serialize(new
+            {
+                id = generatedGuid
+            }));
+            
+            await HttpContext.Response.CompleteAsync();
+            await _dicomService.SaveFiles(patientId, files, generatedGuid);
+            //return Task.FromResult(new
+            //{
+            //    id = genereatedGuid
+            //});
         }
 
     }

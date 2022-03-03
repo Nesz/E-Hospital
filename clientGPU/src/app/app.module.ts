@@ -12,12 +12,13 @@ import { CanvasPartComponent } from './components/canvas-part/canvas-part.compon
 import { LoginComponent } from './pages/login/login.component';
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { HomeComponent } from './pages/home/home.component';
-import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { PatientsComponent } from './pages/patients/patients.component';
 import { TableComponent } from './components/table/table.component';
 import { IconComponent } from './components/icon/icon.component';
 import { DelayedInputComponent } from './delayed-input/delayed-input.component';
 import { PatientComponent } from './pages/patient/patient.component';
+import { ClickOutsideDirective } from "./directives/click-outside.directive";
+import { AreasSidebarComponent } from './components/areas-sidebar/areas-sidebar.component';
 
 @NgModule({
   declarations: [
@@ -29,12 +30,13 @@ import { PatientComponent } from './pages/patient/patient.component';
     CanvasPartComponent,
     LoginComponent,
     HomeComponent,
-    SidebarComponent,
     PatientsComponent,
     TableComponent,
     IconComponent,
     DelayedInputComponent,
     PatientComponent,
+    ClickOutsideDirective,
+    AreasSidebarComponent,
   ],
   imports: [BrowserModule, AppRoutingModule, HttpClientModule, FormsModule, ReactiveFormsModule],
   providers: [],

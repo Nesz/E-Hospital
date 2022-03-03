@@ -1,5 +1,9 @@
 @import "../../../variables";
 
+:host {
+  display: contents;
+}
+
 .content {
   display: flex;
   flex-flow: column;

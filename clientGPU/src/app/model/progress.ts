@@ -3,7 +3,6 @@ export class Progress {
   now: number;
   percentage = 0;
 
-
   constructor(full: number, now: number) {
     this.full = full;
     this.now = now;

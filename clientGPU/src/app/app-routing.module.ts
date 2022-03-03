@@ -1,6 +1,5 @@
 import { APP_INITIALIZER, NgModule } from "@angular/core";
 import { RouterModule, Routes } from '@angular/router';
-import { AppComponent } from './app.component';
 import { EditorComponent } from './components/editor/editor.component';
 import { LoginComponent } from "./pages/login/login.component";
 import { AuthenticationGuard } from "./guards/authentication.guard";
@@ -9,19 +8,11 @@ import { HTTP_INTERCEPTORS } from "@angular/common/http";
 import { TokenInterceptor } from "./interceptors/token.interceptor";
 import { HomeComponent } from "./pages/home/home.component";
 import { PatientsComponent } from "./pages/patients/patients.component";
-import { IconRegistryService } from "./services/icon-registry.service";
 import { NotAuthenticatedGuard } from "./guards/not-authenticated.guard";
 import { PatientComponent } from "./pages/patient/patient.component";
+import { SignalRService } from "./services/signal-r.service";
 
-const iconInitializer = (registry: IconRegistryService): (() => Promise<void>) => {
-  return () =>
-    registry.loadAssets()
-      .toPromise()
-      .then((result) => console.log(result))
-      .catch((error) => console.log(error))
-}
-
-const initializer = (auth: AuthenticationService): (() => Promise<void>) => {
+const initializer = (auth: AuthenticationService, signalR: SignalRService): (() => Promise<void>) => {
   if (!localStorage.getItem('access_token')) {
     return () => Promise.resolve();
   }
@@ -30,7 +21,10 @@ const initializer = (auth: AuthenticationService): (() => Promise<void>) => {
     auth
       .me()
       .toPromise()
-      .then((result) => console.log(result))
+      .then((result) => {
+        console.log(result)
+        return signalR.startConnection();
+      })
       .catch((error) => console.log(error))
 };
 
@@ -76,13 +70,7 @@ const routes: Routes = [
     {
       provide: APP_INITIALIZER,
       useFactory: initializer,
-      deps: [AuthenticationService],
-      multi: true,
-    },
-    {
-      provide: APP_INITIALIZER,
-      useFactory: iconInitializer,
-      deps: [IconRegistryService],
+      deps: [AuthenticationService, SignalRService],
       multi: true,
     },
   ],

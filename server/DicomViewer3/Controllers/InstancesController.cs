@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using DicomViewer3.Dtos;
 using DicomViewer3.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,5 +30,6 @@ namespace DicomViewer3.Controllers
         {
             return await _instanceService.GetInstanceMeta(instanceId);
         }
+        
     }
 }

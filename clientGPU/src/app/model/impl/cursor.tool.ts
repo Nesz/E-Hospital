@@ -1,8 +1,8 @@
-import { Tool } from '../tool';
 import { EditorComponent } from '../../components/editor/editor.component';
+import { Tool } from "../interfaces";
 
 export class CursorTool implements Tool {
-  public readonly toolIcon = 'assets/cursor.svg';
+  public readonly toolIcon = 'cursor';
   public readonly toolName = 'Cursor';
   public readonly extraOptions = {};
 

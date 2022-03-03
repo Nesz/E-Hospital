@@ -47,10 +47,10 @@ namespace DicomViewer3.Repositories.Impl
             int pageNumber,
             int pageSize,
             Func<IQueryable<Series>, IQueryable<Series>> filter = null, 
-            Func<IQueryable<Series>, IQueryable<Series>> sort = null)
+            Func<IQueryable<Series>, IOrderedQueryable<Series>> sort = null)
         {
             filter ??= x => x;
-            sort ??= x => x;
+            sort ??= x => x.OrderBy(series => series.Id);
 
             var baseFilter = _context.Series
                 .Where(x => x.Study.User.Id == patientId);

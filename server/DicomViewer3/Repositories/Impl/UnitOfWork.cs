@@ -10,6 +10,7 @@ namespace DicomViewer3.Repositories.Impl
         public IStudyRepository Studies { get; }
         public ISeriesRepository Series { get; }
         public IInstanceRepository Instances { get; set; }
+        public IAreaRepository Areas { get; set; }
 
         public UnitOfWork(DataContext context)
         {
@@ -18,6 +19,7 @@ namespace DicomViewer3.Repositories.Impl
             Studies = new StudyRepository(context);
             Series = new SeriesRepository(context);
             Instances = new InstanceRepository(context);
+            Areas = new AreaRepository(context);
         }
 
         public async Task CompleteAsync()

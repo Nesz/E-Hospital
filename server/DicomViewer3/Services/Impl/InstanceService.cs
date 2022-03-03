@@ -1,5 +1,7 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using DicomViewer3.Dtos;
+using DicomViewer3.Entities;
 using DicomViewer3.Repositories;
 using MongoDB.Bson;
 

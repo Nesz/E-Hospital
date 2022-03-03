@@ -1,8 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using AutoMapper;
 using DicomViewer3.Dtos;
+using DicomViewer3.Entities;
+using DicomViewer3.Helpers;
 using DicomViewer3.Models;
 using DicomViewer3.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace DicomViewer3.Services.Impl
 {
@@ -33,6 +38,27 @@ namespace DicomViewer3.Services.Impl
         {
             var series = await _unitOfWork.Series.GetSeriesByPatientAndSeriesId(patientId, seriesId);
             return _mapper.Map<SeriesDto>(series);
+        }
+
+        public async Task AddArea(long seriesId, AreaAddRequestDto request)
+        {
+            var series = await _unitOfWork.Series.GetById(seriesId);
+            var area = new Area
+            {
+                Series = series,
+                Label = request.Label,
+                Orientation = request.Orientation,
+                Slice = request.Slice,
+                Vertices = request.Vertices
+            };
+            await _unitOfWork.Areas.Add(area);
+            await _unitOfWork.CompleteAsync();
+        }
+
+        public async Task<IEnumerable<AreaDto>> GetAreas(long seriesId)
+        {
+            var areas = await _unitOfWork.Areas.GetAreasBySeriesId(seriesId);
+            return _mapper.Map<IList<AreaDto>>(areas);
         }
     }
 }

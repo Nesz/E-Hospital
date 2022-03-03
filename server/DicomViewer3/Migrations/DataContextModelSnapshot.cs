@@ -19,6 +19,35 @@ namespace DicomViewer3.Migrations
                 .HasAnnotation("ProductVersion", "5.0.12")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
+            modelBuilder.Entity("DicomViewer3.Entities.Area", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<string>("Label")
+                        .HasColumnType("text");
+
+                    b.Property<char>("Orientation")
+                        .HasColumnType("character(1)");
+
+                    b.Property<long?>("SeriesId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Slice")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Vertices")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SeriesId");
+
+                    b.ToTable("Areas");
+                });
+
             modelBuilder.Entity("DicomViewer3.Entities.Instance", b =>
                 {
                     b.Property<long>("Id")
@@ -166,6 +195,15 @@ namespace DicomViewer3.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("DicomViewer3.Entities.Area", b =>
+                {
+                    b.HasOne("DicomViewer3.Entities.Series", "Series")
+                        .WithMany("Areas")
+                        .HasForeignKey("SeriesId");
+
+                    b.Navigation("Series");
+                });
+
             modelBuilder.Entity("DicomViewer3.Entities.Instance", b =>
                 {
                     b.HasOne("DicomViewer3.Entities.Series", "Series")
@@ -195,6 +233,8 @@ namespace DicomViewer3.Migrations
 
             modelBuilder.Entity("DicomViewer3.Entities.Series", b =>
                 {
+                    b.Navigation("Areas");
+
                     b.Navigation("Instances");
                 });
 #pragma warning restore 612, 618

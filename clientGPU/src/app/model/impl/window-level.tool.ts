@@ -1,9 +1,9 @@
-import { Tool } from '../tool';
 import { EditorComponent } from '../../components/editor/editor.component';
 import { CanvasPartComponent } from "../../components/canvas-part/canvas-part.component";
+import { Tool } from "../interfaces";
 
 export class WindowLevelTool implements Tool {
-  public readonly toolIcon = 'assets/contrast.svg';
+  public readonly toolIcon = 'contrast';
   public readonly toolName = 'Window level';
   public readonly extraOptions = {
     type: 'dropdown',

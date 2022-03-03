@@ -9,6 +9,7 @@ namespace DicomViewer3.Repositories
         IStudyRepository Studies { get; }
         ISeriesRepository Series { get; }
         IInstanceRepository Instances { get; }
+        IAreaRepository Areas { get; }
         
         Task CompleteAsync();
     }

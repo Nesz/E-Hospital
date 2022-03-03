@@ -1,33 +1,31 @@
-import { BehaviorSubject, forkJoin, fromEvent, Observable, Subscription } from "rxjs";
+import { BehaviorSubject, forkJoin, fromEvent, Subscription } from "rxjs";
 import {
   AfterViewInit,
-  Component, ComponentFactory, ComponentFactoryResolver, ComponentRef,
+  Component, ComponentFactoryResolver, ComponentRef,
   ElementRef,
   NgZone, OnDestroy,
   OnInit,
-  QueryList, TemplateRef,
   ViewChild,
-  ViewChildren, ViewContainerRef
+  ViewContainerRef
 } from "@angular/core";
 import { ProgressRingComponent } from "../progress-ring/progress-ring.component";
 import { generateTextures, isInsideBoundsBBox } from "../../helpers/canvas.helper";
 import { debounceTime, delay, mergeMap, tap } from "rxjs/operators";
-import { ShaderService, Uniforms } from "../../services/shader.service";
+import { ShaderService } from "../../services/shader.service";
 import { ApiService } from "../../services/api.service";
 import { DicomConstants } from "../../dicom.constants";
 import { UntilDestroy } from "@ngneat/until-destroy";
 import { ActivatedRoute } from "@angular/router";
 import { Camera } from "../../model/camera";
 import { Dicom } from "../../model/dicom";
-import { Shape } from "../../model/shape";
-import { Tool } from "../../model/tool";
 import * as GLM from "gl-matrix";
 import { Tag } from "../../tag";
 import { Orientations } from "../../model/orientations.model";
 import { Progress } from "../../model/progress";
 import { CanvasPartComponent } from "../canvas-part/canvas-part.component";
 import { Program } from "../../model/program";
-import { quat } from "gl-matrix";
+import { vec4 } from "gl-matrix";
+import { Shape, Tool } from "../../model/interfaces";
 
 export interface CanvasDrawingArea {
   camera: Camera;
@@ -48,20 +46,17 @@ export interface CanvasDrawingArea {
   styleUrls: ['./editor.component.scss'],
 })
 export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
-  sidebarActive = false;
-
-  shapes: {
-    vertices: number[];
-    isSelected: boolean;
-    isVisible: boolean;
-  }[] = [];
-
-  canvases: ComponentRef<CanvasPartComponent>[] = [];
   @ViewChild('container', { read: ViewContainerRef }) container!: ViewContainerRef;
   @ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('progressIndicator') progressIndicator!: ProgressRingComponent;
   @ViewChild('sidebar') sidebar!: ElementRef<HTMLDivElement>;
   @ViewChild('parent') parent!: ElementRef<HTMLSpanElement>;
+
+  sidebarActive = false;
+
+  shapes: Shape[] = [];
+
+  canvases: ComponentRef<CanvasPartComponent>[] = [];
 
   context!: WebGL2RenderingContext;
 
@@ -100,8 +95,14 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   ) {}
 
 
+  onShapeFinish(shape: Shape) {
+    const routeParams = this.route.snapshot.paramMap;
+    this.api.addArea(routeParams.get('seriesId')!, shape).subscribe(x => {
+      console.log(x)
+    })
+  }
+
   ngOnDestroy() {
-    this.context.getExtension('WEBGL_lose_context')?.loseContext();
     this.canvases.forEach(x => x.destroy())
   }
 
@@ -124,12 +125,14 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
         return forkJoin([
           this.api.getInstanceMeta(series.instances[0].id),
+          this.api.getAreas(args.seriesId),
           ...$frames,
         ]);
       }))
       .pipe(tap(() => this.progressIndicator.label = 'Generating textures'), delay(300))
       .subscribe((response) => {
         const meta = response.shift() as Dicom;
+        this.shapes = response.shift() as Shape[];
         console.log(meta)
         const frames = response as ArrayBuffer[];
 
@@ -179,7 +182,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
       fromEvent<MouseEvent>(window, 'mousemove').subscribe((event) => this.onMouseMove(event)),
       fromEvent<MouseEvent>(window, 'mouseup').subscribe((event) => this.onMouseUp(event)),
       fromEvent<WheelEvent>(window, 'wheel').subscribe((event) => this.onWheel(event)),
-      this.canvasResolution$.pipe(debounceTime(100)).subscribe((event) => this.onResize(event))
+      this.canvasResolution$.pipe(debounceTime(100)).subscribe((_) => this.onResize())
     );
   }
 
@@ -206,7 +209,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     if (orientation === 'x') return this.orientation.x;
     if (orientation === 'y') return this.orientation.y;
     if (orientation === 'z') return this.orientation.z;
-    throw '4D orientation ?';
+    throw 'Unknown orientation';
   };
 
   getCanvasPartFromMousePosition(x: number, y: number) {
@@ -227,7 +230,6 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   render = (canvasPart: CanvasPartComponent) => {
-    console.log("render")
     const gl = this.context;
     const canvasSlice = canvasPart.canvasPart;
     const canvas = this.canvas.nativeElement.getBoundingClientRect();
@@ -269,6 +271,31 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    gl.useProgram(this.programs['shape'].gl);
+
+    this.shapes
+      .filter(shape => shape.orientation === canvasSlice.orientation)
+      .filter(shape => shape.slice === canvasSlice.currentSlice)
+      .filter(shape => shape.isVisible)
+      .forEach(shape => {
+        const vertex_buffer = gl.createBuffer()!;
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(shape.vertices), gl.STATIC_DRAW);
+
+        // Get the attribute location
+        const coord = gl.getAttribLocation(this.programs['shape'].gl, 'a_position');
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
+        gl.vertexAttribPointer(coord, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(coord);
+
+        this.programs['shape'].assignUniforms(gl, {
+          u_matrix: camera.viewProjectionMat,
+          u_color: vec4.fromValues(1.0, 1.0, 0.0, 1.0),
+        });
+
+        gl.drawArrays(gl.LINE_LOOP, 0, shape.vertices.length / 2);
+      })
   };
 
   getClipSpaceMousePosition = (clientX: number, clientY: number, rect: DOMRect) => {
@@ -332,21 +359,13 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     component.instance.canvasPart = canvasDrawingArea;
     component.instance.slices = this.getOrientationSlices(canvasDrawingArea.orientation)
 
-    component.instance.onAxisChange.subscribe(x => {
-      this.render(x);
-    })
-    component.instance.onSliceChange.subscribe(x => {
-      this.render(x);
-    })
-    component.instance.onResize.subscribe(x => {
-      console.log("renderere")
-      this.onResize({width: 0, height: 0});
-    })
+    component.instance.onAxisChange.subscribe(x => this.render(x));
+    component.instance.onSliceChange.subscribe(x => this.render(x));
+    component.instance.onResize
+      .pipe(debounceTime(100))
+      .subscribe(x => this.onResize())
 
-    component.instance.whenDestroyed = () => {
-      console.log("destroyed")
-      this.onResize({width: 0, height: 0})
-    }
+    component.instance.whenDestroyed = () => this.onResize();
 
     return component;
   }
@@ -363,6 +382,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
       'shaders/sh/shader_shape_vert.glsl',
       'shaders/sh/shader_shape_frag.glsl'
     );
+
     return forkJoin([$mainProgram, $shapeProgram])
       .pipe(tap(([mainProgram, shapeProgram]) => {
         this.programs['default'] = new Program(mainProgram[0], mainProgram[1]);
@@ -379,9 +399,13 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   private getDefaultWindowing = () => {
     const dicom = this.dicom;
     if (dicom.hasTag(Tag.WINDOW_CENTER) && dicom.hasTag(Tag.WINDOW_WIDTH)) {
+      let wc = dicom.getValue(Tag.WINDOW_CENTER, true).value;
+      let ww = dicom.getValue(Tag.WINDOW_CENTER, true).value;
+      if (wc.constructor.name == 'Array') wc = wc[0];
+      if (ww.constructor.name == 'Array') ww = ww[0];
       return {
-        wc: dicom.getValue(Tag.WINDOW_CENTER, true).asNumber(),
-        ww: dicom.getValue(Tag.WINDOW_WIDTH, true).asNumber(),
+        wc: Number(wc),
+        ww: Number(ww),
         min: 0,
         max: 0,
       };
@@ -393,51 +417,30 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     this.tool = tool;
   };
 
-  reset() {
-
-  }
-
-  private onResize = (dimensions: { width: number; height: number }) => {
-    console.log("resize")
+  private onResize = () => {
     if (this.context) {
       this.context.canvas.width = this.parent.nativeElement.clientWidth;
       this.context.canvas.height = this.parent.nativeElement.clientHeight;
-      console.log(this.canvases)
       this.canvases.forEach(x => {
-        console.log("inside")
         if (x.instance.isRendered) {
-          console.log("insideeee")
           x.instance.resetPosition();
           this.render(x.instance);
         }
       })
-      /*const [scale, offX, offY] = this.calculateAspectRatio(dimensions);
-
-      this.camera.zoom = scale;
-      //this.camera.x = -offX;
-      //this.camera.y = -offY;
-      if (!this.isAnimating) {
-        console.log('resize');
-        this.renderQuad();
-      }*/
     }
   };
 
-  private onWheel = (event: WheelEvent) => {
+  private onWheel = (event: WheelEvent) =>
     this.tool.onScroll(event, this);
-  };
 
-  private onMouseUp = (event: MouseEvent) => {
+  private onMouseUp = (event: MouseEvent) =>
     this.tool.onMouseUp(event, this);
-  };
 
-  private onMouseDown = (event: MouseEvent) => {
+  private onMouseDown = (event: MouseEvent) =>
     this.tool.onMouseDown(event, this);
-  };
 
-  private onMouseMove = (event: MouseEvent) => {
+  private onMouseMove = (event: MouseEvent) =>
     this.tool.onMouseMove(event, this);
-  };
 
   grid(count: number) {
     if (this.canvases.length < count) {
@@ -457,8 +460,19 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   enabled = false;
   currentHover = -1;
   hover(number: number) {
-    console.log(number);
     this.currentHover = number;
   }
 
+  goToArea(shape: Shape) {
+    for (let canvas of this.canvases) {
+      if (canvas.instance.canvasPart.orientation === shape.orientation) {
+        canvas.instance.canvasPart.currentSlice = shape.slice;
+        this.render(canvas.instance);
+        return;
+      }
+    }
+    this.canvases[0].instance.canvasPart.orientation = shape.orientation;
+    this.canvases[0].instance.canvasPart.currentSlice = shape.slice;
+    this.render(this.canvases[0].instance);
+  }
 }

@@ -13,6 +13,7 @@ namespace DicomViewer3.Helpers
         {
             CreateMap<User, UserDto>();
 
+            CreateMap<Area, AreaDto>();
             CreateMap<Study, StudyDto>();
             CreateMap<Series, SeriesDto>();
             CreateMap<Instance, InstanceDto>();

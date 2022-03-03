@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, EMPTY, Observable } from "rxjs";
-import { User } from "../model/user";
 import { HttpClient } from "@angular/common/http";
 import { catchError, map, tap } from "rxjs/operators";
+import { User } from "../model/interfaces";
 
 interface SignInResponse {
   user: User,
@@ -25,6 +25,29 @@ export class AuthenticationService {
 
   public signIn(email: string, password: string): Observable<User> {
     return this.http.post<SignInResponse>('https://localhost:5001/api/authentication/signin', { email, password })
+      .pipe(
+        catchError(err => {
+          console.error(err)
+          return EMPTY;
+        }),
+        map(x => {
+          this._userSubject.next(x.user)
+          localStorage.setItem('access_token', x.token)
+          return x.user;
+        })
+      );
+  }
+
+  public signUp(args: {
+    firstName: string,
+    lastName: string,
+    email: string,
+    phoneNumber: string,
+    birthDate: Date,
+    gender: string,
+    password: string,
+  }): Observable<User> {
+    return this.http.post<SignInResponse>('https://localhost:5001/api/authentication/signup', { ...args })
       .pipe(
         catchError(err => {
           console.error(err)

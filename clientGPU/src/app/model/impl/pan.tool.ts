@@ -1,11 +1,11 @@
-import { Tool } from '../tool';
 import { EditorComponent } from "../../components/editor/editor.component";
 import { mat3, vec2 } from 'gl-matrix';
 import { Camera } from '../camera';
 import { CanvasPartComponent } from "../../components/canvas-part/canvas-part.component";
+import { Tool } from "../interfaces";
 
 export class PanTool implements Tool {
-  public readonly toolIcon = 'assets/move.svg';
+  public readonly toolIcon = 'move';
   public readonly toolName = 'Pan';
   public readonly extraOptions = [];
 

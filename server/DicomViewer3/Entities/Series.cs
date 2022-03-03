@@ -16,5 +16,6 @@ namespace DicomViewer3.Entities
         public DateTime Date { get; set; }
         public virtual Study Study { get; set; }
         public virtual List<Instance> Instances { get; set; }
+        public virtual List<Area> Areas { get; set; }
     }
 }

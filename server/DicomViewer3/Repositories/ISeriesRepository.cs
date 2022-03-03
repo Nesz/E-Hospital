@@ -18,7 +18,7 @@ namespace DicomViewer3.Repositories
             int pageNumber,
             int pageSize,
             Func<IQueryable<Series>, IQueryable<Series>> filter = null,
-            Func<IQueryable<Series>, IQueryable<Series>> sort = null);
+            Func<IQueryable<Series>, IOrderedQueryable<Series>> sort = null);
 
         Task<Series> GetSeriesByPatientAndSeriesId(long patientId, long seriesId);
     }

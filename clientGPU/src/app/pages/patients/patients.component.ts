@@ -1,14 +1,9 @@
 import { AfterViewInit, Component, ViewChild, ViewEncapsulation } from "@angular/core";
-import { ApiService } from "../../services/api.service";
-import { OrderDirection } from "../../model/order-direction";
-import { User } from "../../model/user";
+import { ApiService, Series } from "../../services/api.service";
 import { Header, TableComponent } from "../../components/table/table.component";
 import { Router } from "@angular/router";
-import { Role } from "../../model/role";
-
-interface HeaderSorted extends Header<User> {
-  efField: string
-}
+import { HeaderSorted, User } from "../../model/interfaces";
+import { OrderDirection, Role } from "../../model/enums";
 
 @Component({
   selector: 'app-patients',
@@ -39,9 +34,9 @@ export class PatientsComponent implements AfterViewInit {
       this.api.getPatientsList({
         pageNumber: request.pageNumber,
         pageSize: request.itemsPerPage,
-        pageOrder: this.table.sortedBy ? (this.table.sortedBy.header as HeaderSorted).efField : 'Id',
+        pageOrder: this.table.sortedBy ? (this.table.sortedBy.header as HeaderSorted<User>).efField : 'Id',
         orderDirection: this.table.sortedBy ? this.table.sortedBy.order : OrderDirection.ASCENDING,
-        filterKey: this.filter,
+        keyFilter: this.filter,
         roleFilter: Role.Patient
       }).subscribe((page) => {
         this.table.page = page;
@@ -55,7 +50,7 @@ export class PatientsComponent implements AfterViewInit {
       pageSize: 10,
       pageOrder: 'Id',
       orderDirection: OrderDirection.ASCENDING,
-      filterKey: this.filter,
+      keyFilter: this.filter,
       roleFilter: Role.Patient
     }).subscribe((page) => {
       this.table.page = page;

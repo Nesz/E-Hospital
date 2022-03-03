@@ -1,6 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from "@angular/core";
-import { Page } from "../../model/page";
-import { OrderDirection } from "../../model/order-direction";
+import { OrderDirection, Page } from "../../model/enums";
 
 export interface Header<T> {
   name: string,
@@ -24,6 +23,7 @@ export class TableComponent<T> implements OnInit {
     order: OrderDirection
   };
 
+  @Input() displayControls = true;
   @Input() headers!: Header<T>[];
   @Output() onRowClick = new EventEmitter<T>();
   @Output() pageRequested = new EventEmitter<{

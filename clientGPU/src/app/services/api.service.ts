@@ -1,12 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Dicom, request } from '../model/dicom';
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs';
 import { HttpClient, HttpEvent, HttpRequest } from "@angular/common/http";
 import { map } from 'rxjs/operators';
-import { User } from "../model/user";
-import { OrderDirection } from "../model/order-direction";
-import { Page } from "../model/page";
-import { Role } from "../model/role";
+import { Shape, User } from "../model/interfaces";
+import { OrderDirection, Page, Role } from "../model/enums";
 
 export interface Series {
   id: number;
@@ -75,7 +73,7 @@ export class ApiService {
     return this.http.request(req);
   }
 
-  public getSeriesList(patientId: string, pageNumber: number, pageSize: number,) {
+  public getSeriesList(patientId: string, pageNumber: number, pageSize: number) {
     return this.http.get<Page<Series>>(
       `https://localhost:5001/api/series/${patientId}`, {
         params: {
@@ -86,12 +84,25 @@ export class ApiService {
     );
   }
 
+  public addArea(seriesId: string, shape: Shape) {
+    return this.http.post(`https://localhost:5001/api/series/${seriesId}/area`, {
+      label: shape.label,
+      orientation: shape.orientation,
+      slice: shape.slice,
+      vertices: shape.vertices.map(x => x | 0)
+    })
+  }
+
+  public getAreas(seriesId: string) {
+    return this.http.get<Shape[]>(`https://localhost:5001/api/series/${seriesId}/area`)
+  }
+
   public getPatientsList(args: {
     pageNumber: number,
     pageSize: number,
     pageOrder: string,
     orderDirection: OrderDirection,
-    filterKey: string,
+    keyFilter: string,
     roleFilter: Role
   }) {
     console.log(args)

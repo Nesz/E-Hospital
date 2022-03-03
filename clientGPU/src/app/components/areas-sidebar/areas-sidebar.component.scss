@@ -1,0 +1,142 @@
+@import "../../../variables";
+
+:host {
+  display: contents;
+}
+
+.areas {
+  width: 250px;
+  min-width: 250px;
+  max-width: 250px;
+  background: $color1;
+  position: relative;
+  left: 0;
+  transition: 0.3s;
+  overflow: hidden;
+  white-space: nowrap;
+
+  &__hidden {
+    width: 0;
+    min-width: 0;
+    max-width: 0;
+  }
+
+  &__header {
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-size: 1.225rem;
+    font-family: Bahnschrift;
+  }
+
+  &--hidden {
+    & > img {
+      transform: rotate(180deg);
+    }
+  }
+
+  &--hide-icon {
+    margin-left: auto;
+    height: 44px;
+    width: 44px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    & > img {
+      transition: 0.3s;
+      height: 32px;
+      width: 32px;
+    }
+
+    &:hover {
+      background: $color4;
+      cursor: pointer;
+    }
+  }
+}
+
+.area {
+  display: flex;
+  //height: 44px;
+  width: 100%;
+  color: white;
+  font-size: 1.125rem;
+
+  &__index {
+    cursor: pointer;
+    margin-right: 5px;
+    height: 22px;
+    width: 22px;
+    min-width: 22px;
+    text-align: center;
+    line-height: 22px;
+    user-select: none;
+  }
+
+  &__icons {
+    margin-top: 15px;
+  }
+
+  &--details {
+    transition: 0.5s;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-left: 22px;
+    &__disabled {
+      min-height: 0;
+      max-height: 0;
+      min-width: 0;
+      max-width: 0;
+      height: 0;
+    }
+  }
+
+  &--more {
+    width: 20%;
+    display: flex;
+    justify-content: center;
+
+    &__icon {
+      width: 18px;
+      height: 18px;
+      transform: rotate(180deg);
+    }
+  }
+
+  &__label {
+    background: $color1;
+    outline: none;
+    border: none;
+    color: white;
+    font-size: 1rem;
+    width: 80%;
+    border-bottom: 1px solid $color4;
+  }
+
+  &--icon {
+    padding: 5px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+
+    &__wrapper {
+      display: flex;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+    }
+    &:hover {
+      color: #12a5a4;
+    }
+  }
+
+  &--position {
+
+  }
+
+  &--details {
+
+  }
+}

@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin, Observable } from "rxjs";
 import { map } from 'rxjs/operators';
-import { storedPixelDataToImageData } from '../helpers/canvas.helper';
 
 export interface Uniforms {
   [key: string]: {

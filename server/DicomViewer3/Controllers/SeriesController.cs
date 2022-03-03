@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using DicomViewer3.Dtos;
 using DicomViewer3.Models;
 using DicomViewer3.Services;
@@ -30,5 +32,24 @@ namespace DicomViewer3.Controllers
         {
             return await _seriesService.GetSeriesByPatientAndSeriesId(patientId, seriesId);
         }
+        
+        [HttpPost("{seriesId:long}/area")]
+        public async Task AddArea([FromRoute] long seriesId, [FromBody] AreaAddRequestDto request)
+        {
+            await _seriesService.AddArea(seriesId, request);
+        }
+        
+        [HttpDelete("{seriesId:long}/area/{areaId:long}")]
+        public async Task RemoveArea([FromRoute] long seriesId, [FromRoute] long areaId, [FromBody] AreaAddRequestDto request)
+        {
+            await _seriesService.AddArea(seriesId, request);
+        }
+        
+        [HttpGet("{seriesId:long}/area")]
+        public async Task<IEnumerable<AreaDto>> GetAreas([FromRoute] long seriesId)
+        {
+            return await _seriesService.GetAreas(seriesId);
+        }
+        
     }
 }

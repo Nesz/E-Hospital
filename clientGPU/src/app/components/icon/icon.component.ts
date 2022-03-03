@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Input, OnInit, ViewEncapsulation } from "@angular/core";
+import { AfterViewInit, Component, Input, OnInit, SimpleChanges, ViewEncapsulation } from "@angular/core";
 import { IconRegistryService } from "../../services/icon-registry.service";
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -6,7 +6,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   selector: 'app-icon',
   templateUrl: './icon.component.html',
   styleUrls: ['./icon.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  //encapsulation: ViewEncapsulation.None
 })
 export class IconComponent implements OnInit {
 
@@ -19,8 +19,13 @@ export class IconComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    const asset = this.registry.registeredIcons[this.icon];
-    this.data = this.sanitizer.bypassSecurityTrustHtml(asset);
+    this.registry.requestIcon(this.icon)
+      .subscribe(iconData => this.data = this.sanitizer.bypassSecurityTrustHtml(iconData))
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    this.registry.requestIcon(this.icon)
+      .subscribe(iconData => this.data = this.sanitizer.bypassSecurityTrustHtml(iconData))
   }
 
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -8,9 +9,11 @@ using DicomViewer.Helpers;
 using DicomViewer3.Dtos;
 using DicomViewer3.Entities;
 using DicomViewer3.Helpers;
+using DicomViewer3.Hubs;
 using DicomViewer3.Models;
 using DicomViewer3.Repositories;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using MongoDB.Bson;
 using MongoDB.Driver.GridFS;
 
@@ -19,22 +22,51 @@ namespace DicomViewer3.Services.Impl
     public class DicomService : IDicomService
     {
 
+        private readonly IHubContext<ProgressHub> _progressHub;
+        private readonly IUserAccessor _userAccessor;
         private readonly IMongoService _mongoService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public DicomService(IMongoService mongoService, IUnitOfWork unitOfWork, IMapper mapper)
+        public DicomService(
+            IHubContext<ProgressHub> progressHub, 
+            IUserAccessor userAccessor, 
+            IMongoService mongoService, 
+            IUnitOfWork unitOfWork, 
+            IMapper mapper)
         {
+            _progressHub = progressHub;
             _mongoService = mongoService;
+            _userAccessor = userAccessor;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
-        public async Task SaveFiles(long patientId, IEnumerable<IFormFile> files)
+        public Guid RunTaskSaveFiles(long patientId, IEnumerable<IFormFile> files)
         {
-            foreach (var file in files)
+            var progressGeneratedId = Guid.NewGuid();
+            //SaveFiles(patientId, files, progressGeneratedId)
+            return progressGeneratedId;
+        }
+
+        public async Task SaveFiles(long patientId, IEnumerable<IFormFile> files, Guid guid)
+        {
+            var invokerId = _userAccessor.GetUserId();
+            //var progressGeneratedId = Guid.NewGuid();
+            var formFiles = files as IFormFile[] ?? files.ToArray();
+            var filesList = formFiles.ToList();
+            for (var i = 0; i < filesList.Count; ++i)
             {
+                var file = filesList[i];
                 await SaveDicomFile(patientId, file);
+                await _progressHub.Clients.Group(invokerId.ToString()).SendAsync(
+                    "broadcastprogress",
+                    new Progress
+                    {
+                        Id = guid,
+                        CurrentProgress = i + 1,
+                        TotalProgress = filesList.Count
+                    });
             }
         }
         
@@ -110,5 +142,6 @@ namespace DicomViewer3.Services.Impl
 
             await _unitOfWork.CompleteAsync();
         }
+        
     }
 }
