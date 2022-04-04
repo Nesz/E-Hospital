@@ -1,0 +1,19 @@
+<div class="wrapper">
+  <div class="menu">
+    <span>Iterations</span>
+    <input type="number" [value]="iterations" (input)="changeInput($event)"/>
+
+    <span>Test Suite</span>
+    <span *ngFor="let file of files">
+      {{file}}
+    </span>
+    <button (click)="runTest()">start</button>
+
+    <div class="progress-wrapper">
+      <div class="progress"
+           [style.width]="(iprogress / (files.length * iterations * 2)) * 100 + '%'"></div>
+    </div>
+  </div>
+  <canvas class="canvas" #canvasCPU></canvas>
+  <canvas class="canvas" #canvasGPU></canvas>
+</div>

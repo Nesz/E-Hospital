@@ -1,0 +1,51 @@
+.canvas {
+  width: 40%;
+  height: 100%;
+  background: black;
+}
+
+.wrapper {
+  background: #52e754;
+  display: flex;
+  flex-flow: row;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  gap: 5px;
+}
+
+.menu {
+  width: 20%;
+  height: 100%;
+  background: black;
+  color: #FFFFFF;
+  display: flex;
+  flex-flow: column;
+
+  input {
+    width: 30%;
+    font-size: 16px;
+  }
+
+  button {
+    width: 30%;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+}
+
+.progress {
+  background: #52e754;
+  height: 10px;
+  border-radius: 5px;
+  &-wrapper{
+    margin-top: 50px;
+    width: 80%;
+    height: 10px;
+    background: #FFFFFF;
+    border-radius: 5px;
+  }
+}
