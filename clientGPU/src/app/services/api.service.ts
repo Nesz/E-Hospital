@@ -49,7 +49,7 @@ export class ApiService {
       )
       .pipe(
         map((x) => {
-          return new Dicom(x.preamble, x.prefix, x.entries);
+          return new Dicom(x.preamble, x.prefix, x.dataset);
         })
       );
   }

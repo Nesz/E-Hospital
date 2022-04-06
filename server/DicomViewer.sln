@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DicomParser", "DicomParser\DicomParser\DicomParser.csproj", "{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{A62DFFE7-6F18-4ABB-8BA9-2A06CAED2F0D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DicomViewer3", "DicomViewer3\DicomViewer3.csproj", "{A62DFFE7-6F18-4ABB-8BA9-2A06CAED2F0D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parser", "Parser\Parser.csproj", "{7B89F471-BC1A-4BD4-9192-5FDAA9C41FB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -10,13 +10,13 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C5C67A94-EF0B-49EF-8C6D-4A33C63C5A46}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A62DFFE7-6F18-4ABB-8BA9-2A06CAED2F0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A62DFFE7-6F18-4ABB-8BA9-2A06CAED2F0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A62DFFE7-6F18-4ABB-8BA9-2A06CAED2F0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A62DFFE7-6F18-4ABB-8BA9-2A06CAED2F0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B89F471-BC1A-4BD4-9192-5FDAA9C41FB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B89F471-BC1A-4BD4-9192-5FDAA9C41FB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B89F471-BC1A-4BD4-9192-5FDAA9C41FB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B89F471-BC1A-4BD4-9192-5FDAA9C41FB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

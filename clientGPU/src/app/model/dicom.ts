@@ -10,7 +10,7 @@ export class Dictionary<T> {
 export interface request {
   preamble: string;
   prefix: string;
-  entries: Dictionary<entry>;
+  dataset: Dictionary<entry>;
 }
 
 export class Dicom {
@@ -18,32 +18,32 @@ export class Dicom {
 
   preamble: string;
   prefix: string;
-  entries: Sequence;
+  dataset: Sequence;
 
   constructor(preamble: string, prefix: string, entries: Dictionary<entry>) {
     this.preamble = preamble;
     this.prefix = prefix;
-    this.entries = new Sequence(entries);
+    this.dataset = new Sequence(entries);
   }
 
   public hasTag(tag: string) {
-    return this.entries.hasTag(tag);
+    return this.dataset.hasTag(tag);
   }
 
   public getValue(tag: string, recursive = false): Attribute {
-    return this.entries.getValue(tag, recursive);
+    return this.dataset.getValue(tag, recursive);
   }
 
   public asNumber(tag: string, recursive = false) {
-    return this.entries.getValue(tag, recursive).asNumber();
+    return this.dataset.getValue(tag, recursive).asNumber();
   }
 
   public asString(tag: string, recursive = false) {
-    return this.entries.getValue(tag, recursive).asString();
+    return this.dataset.getValue(tag, recursive).asString();
   }
 
   public asList<T>(tag: string, recursive = false) {
-    return this.entries.getValue(tag, recursive).asList<T>();
+    return this.dataset.getValue(tag, recursive).asList<T>();
   }
 
 }

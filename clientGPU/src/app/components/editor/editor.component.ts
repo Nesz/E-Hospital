@@ -132,6 +132,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
       .pipe(tap(() => this.progressIndicator.label = 'Generating textures'), delay(300))
       .subscribe((response) => {
         const meta = response.shift() as Dicom;
+        console.log(meta)
         this.shapes = response.shift() as Shape[];
         console.log(meta)
         const frames = response as ArrayBuffer[];
@@ -409,6 +410,13 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         min: 0,
         max: 0,
       };
+    } else {
+      return {
+        wc: 0,
+        ww: 0,
+        min: 0,
+        max: 0
+      }
     }
     throw 'no windowing';
   };
