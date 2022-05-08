@@ -14,6 +14,7 @@ export interface HeaderSorted<T> extends Header<T> {
 }
 
 export interface Shape {
+  id: number,
   label: string;
   description: string;
   slice: number;

@@ -49,7 +49,7 @@ export class ApiService {
       )
       .pipe(
         map((x) => {
-          return new Dicom(x.preamble, x.prefix, x.entries);
+          return new Dicom(x.preamble, x.prefix, x.dataset);
         })
       );
   }
@@ -85,11 +85,22 @@ export class ApiService {
   }
 
   public addArea(seriesId: string, shape: Shape) {
-    return this.http.post(`https://localhost:5001/api/series/${seriesId}/area`, {
+    return this.http.post<Shape>(`https://localhost:5001/api/series/${seriesId}/area`, {
       label: shape.label,
       orientation: shape.orientation,
       slice: shape.slice,
       vertices: shape.vertices.map(x => x | 0)
+    })
+    .pipe(map(s => shape.id = s.id))
+  }
+
+  public deleteArea(seriesId: number, shape: Shape) {
+    return this.http.delete(`https://localhost:5001/api/series/${seriesId}/area/${shape.id}`)
+  }
+
+  public updateAreaLabel(seriesId: number, shape: Shape) {
+    return this.http.patch(`https://localhost:5001/api/series/${seriesId}/area/${shape.id}`, {
+      label: shape.label
     })
   }
 

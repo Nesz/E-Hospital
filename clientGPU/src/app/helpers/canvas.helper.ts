@@ -94,6 +94,12 @@ export const allocBufferView = (type: string, size: number) => {
   if (type === 'uint16') {
     return new Uint16Array(size);
   }
+  if (type === 'uint8') {
+    return new Uint8Array(size);
+  }
+  if (type === 'int8') {
+    return new Int8Array(size);
+  }
   throw `unknown type '${type}' cannot allocate buffer`;
 };
 
@@ -103,6 +109,12 @@ export const getView = (buffer: ArrayBuffer, type: string) => {
   }
   if (type === 'uint16') {
     return new Uint16Array(buffer);
+  }
+  if (type === 'uint8') {
+    return new Uint8Array(buffer);
+  }
+  if (type === 'int8') {
+    return new Int8Array(buffer);
   }
   throw `unknown type '${type}' cannot get view`;
 };

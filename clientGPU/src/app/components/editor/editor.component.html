@@ -29,9 +29,15 @@
         ></span>
       </span>
     </span>
+
+    <span class="tools--list--entry" (click)="export()">
+      <app-icon class="tools--list--entry__icon" icon="camera"></app-icon>
+      <span class="tools--list--entry__tooltip">Export</span>
+    </span>
   </div>
 
   <app-areas-sidebar
+    [editor]="this"
     [isHidden]="sidebarActive"
     [shapes]="shapes">
   </app-areas-sidebar>

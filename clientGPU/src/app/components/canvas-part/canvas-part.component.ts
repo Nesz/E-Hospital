@@ -9,6 +9,7 @@ import {
   ViewChild
 } from "@angular/core";
 import { CanvasDrawingArea, EditorComponent } from "../editor/editor.component";
+import { FpsLoop } from "../../helpers/fps-loop";
 
 @Component({
   selector: 'app-canvas-part',
@@ -29,7 +30,8 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
   @Output() onAxisChange = new EventEmitter<CanvasPartComponent>();
   @Output() onSliceChange = new EventEmitter<CanvasPartComponent>();
   @Output() onResize = new EventEmitter<CanvasPartComponent>();
-
+  fps = 30;
+  timer = new FpsLoop(this.fps, (_: any) => this.nextSlice());
 
   constructor(
     private readonly zone: NgZone
@@ -92,6 +94,13 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
     ];
   };
 
+  nextSlice() {
+    if (this.canvasPart.currentSlice === this.editor.orientation[this.canvasPart.orientation].slices.length) {
+      this.canvasPart.currentSlice = 0;
+    }
+    this.canvasPart.currentSlice++;
+    this.onSliceChange.emit(this);
+  }
 
   changeAxis($event: Event) {
     // @ts-ignore
@@ -117,4 +126,16 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
     this.editor.render(this);
   }
 
+  fpsChanged($event: Event) {
+    this.fps = Number(($event.target as HTMLInputElement).value);
+    this.timer.changeFPS(this.fps)
+  }
+
+  togglePlayer() {
+    if (this.timer.isPlaying) {
+      this.timer.stop();
+    } else {
+      this.timer.start();
+    }
+  }
 }

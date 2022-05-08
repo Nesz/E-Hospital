@@ -21,6 +21,21 @@
         <span>WW</span>
         <input type="number" [value]="canvasPart.windowing.ww" (input)="windowingChanged('ww', $event)">
       </div>
+      <div class="player">
+        <app-icon
+          class="player--icon"
+          (click)="togglePlayer()"
+          [icon]="timer.isPlaying ? 'pause' : 'play'"></app-icon>
+        <input
+          type="range"
+          name="frame"
+          min="1"
+          max="100"
+          [value]="fps"
+          (input)="fpsChanged($event)"
+        />
+        <span class="player--fps">{{ fps }} fps</span>
+      </div>
     </div>
   </div>
   <div #canvas id="draw-area" class="canvas-part__draw-area"></div>

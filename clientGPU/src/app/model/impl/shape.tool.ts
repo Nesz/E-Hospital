@@ -12,6 +12,7 @@ export class ShapeTool implements Tool {
   private _startPoint = vec2.create();
   private _dragging = false;
   private _shape!: Shape;
+  private _isDrawing = false;
 
   onExtraOption = (index: number, editor: EditorComponent) => {};
 
@@ -28,6 +29,7 @@ export class ShapeTool implements Tool {
       this.canvasPart = canvasPart.instance;
       this._startPoint = vec2.fromValues(event.clientX, event.clientY);
       this._shape = {
+        id: -1,
         label: "label",
         description: "description",
         vertices: [],

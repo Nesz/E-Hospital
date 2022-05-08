@@ -85,7 +85,7 @@
     margin-right: 5px;
   }
   & > input {
-    width: 50px;
+    width: 35px;
   }
 }
 
@@ -110,4 +110,23 @@ input::-webkit-inner-spin-button {
 /* Firefox */
 input[type=number] {
   -moz-appearance: textfield;
+}
+
+
+.player {
+  display: flex;
+  justify-items: center;
+  align-items: center;
+  margin-left: 15px;
+  &--icon {
+    cursor: pointer;
+    width: 16px;
+    height: 16px
+  }
+  &--fps {
+    min-width: 50px;
+  }
+  input {
+    cursor: pointer;
+  }
 }

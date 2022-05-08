@@ -52,7 +52,8 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   @ViewChild('sidebar') sidebar!: ElementRef<HTMLDivElement>;
   @ViewChild('parent') parent!: ElementRef<HTMLSpanElement>;
 
-  sidebarActive = false;
+  seriesId!: number;
+  sidebarActive = true;
 
   shapes: Shape[] = [];
 
@@ -108,6 +109,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
   ngOnInit() {
     const routeParams = this.route.snapshot.paramMap;
+    this.seriesId = Number(routeParams.get('seriesId')!);
     const args = {
       patientId: routeParams.get('patientId')!,
       seriesId: routeParams.get('seriesId')!,
@@ -132,6 +134,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
       .pipe(tap(() => this.progressIndicator.label = 'Generating textures'), delay(300))
       .subscribe((response) => {
         const meta = response.shift() as Dicom;
+        console.log(meta)
         this.shapes = response.shift() as Shape[];
         console.log(meta)
         const frames = response as ArrayBuffer[];
@@ -291,7 +294,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
         this.programs['shape'].assignUniforms(gl, {
           u_matrix: camera.viewProjectionMat,
-          u_color: vec4.fromValues(1.0, 1.0, 0.0, 1.0),
+          u_color: vec4.fromValues(1.0, 0.0, 0.0, 1.0),
         });
 
         gl.drawArrays(gl.LINE_LOOP, 0, shape.vertices.length / 2);
@@ -409,8 +412,14 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         min: 0,
         max: 0,
       };
+    } else {
+      return {
+        wc: 0,
+        ww: 0,
+        min: 0,
+        max: 0
+      }
     }
-    throw 'no windowing';
   };
 
   changeTool = (tool: Tool) => {
@@ -474,5 +483,20 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     this.canvases[0].instance.canvasPart.orientation = shape.orientation;
     this.canvases[0].instance.canvasPart.currentSlice = shape.slice;
     this.render(this.canvases[0].instance);
+  }
+
+  export() {
+    const img = this.canvas.nativeElement.toDataURL('image/png')
+    this.saveImage(img, "a.png");
+  }
+
+  private saveImage(imagePath: string, imageName: string ){
+    const link = document.createElement('a');
+    link.style.display = 'none';
+    document.body.appendChild(link)
+    link.setAttribute('download', imageName + '.png');
+    link.setAttribute('href', imagePath.replace("image/png", "image/octet-stream"));
+    link.click();
+    link.remove();
   }
 }
