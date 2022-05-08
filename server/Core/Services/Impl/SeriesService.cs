@@ -37,7 +37,7 @@ public class SeriesService : ISeriesService
         return _mapper.Map<SeriesDto>(series);
     }
 
-    public async Task AddArea(long seriesId, AreaAddRequestDto request)
+    public async Task<AreaDto> AddArea(long seriesId, AreaAddRequestDto request)
     {
         var series = await _unitOfWork.Series.GetById(seriesId);
         var area = new Area
@@ -50,6 +50,20 @@ public class SeriesService : ISeriesService
         };
         await _unitOfWork.Areas.Add(area);
         await _unitOfWork.CompleteAsync();
+        return _mapper.Map<AreaDto>(area);
+    }
+
+    public async Task UpdateAreaLabel(long seriesId, long areaId, AreaUpdateLabelRequestDto request)
+    {
+        var area = await _unitOfWork.Areas.GetAreaById(areaId);
+        area.Label = request.Label;
+        await _unitOfWork.CompleteAsync();
+    }
+
+    public async Task RemoveArea(long seriesId, long areaId)
+    {
+        _unitOfWork.Areas.RemoveById(areaId);
+       await _unitOfWork.CompleteAsync();
     }
 
     public async Task<IEnumerable<AreaDto>> GetAreas(long seriesId)

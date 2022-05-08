@@ -34,4 +34,10 @@ public class AreaRepository : IAreaRepository
             .Where(x => x.Series.Id == seriesId)
             .ToListAsync();
     }
+
+    public async Task<Area> GetAreaById(long id)
+    {
+        return await _context.Areas
+            .FirstAsync(x => x.Id == id);
+    }
 }

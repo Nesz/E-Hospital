@@ -1,5 +1,12 @@
 <div class="areas" [class.areas__hidden]="!isHidden">
-  <div class="areas__header">Highlighted Areas</div>
+  <div>
+    <div class="areas__header">Basic Information</div>
+    <div class="info" *ngFor="let entry of infoToDisplay;">
+      <span class="info__header">{{entry[0]}}</span>
+      <span class="info__desc">{{entry[1]()}}</span>
+    </div>
+  </div>
+  <div class="areas__header">Areas</div>
   <div class="area"
     [class.measurement--active]="shape.isSelected"
     *ngFor="let shape of shapes; let i = index"
@@ -7,7 +14,7 @@
     <div class="flex--column">
       <div class="flex--row">
         <span class="area__index">{{ i + 1 }}</span>
-        <input class="area__label" [value]="shape.label"/>
+        <input class="area__label" [value]="shape.label" (change)="updateLabel($event, shape)"/>
         <div class="area--more">
           <app-icon (click)="toggleDetails(shape)" class="area--more__icon" icon="triangle"></app-icon>
         </div>
@@ -26,10 +33,10 @@
               <app-icon (click)="goToArea(shape)" class="area--icon" icon="goto"></app-icon>
             </div>
             <div class="area--icon__wrapper">
-              <app-icon (click)="goToArea(shape)" class="area--icon" icon="delete"></app-icon>
+              <app-icon (click)="delete(shape)" class="area--icon" icon="delete"></app-icon>
             </div>
             <div class="area--icon__wrapper">
-              <app-icon (click)="goToArea(shape)" class="area--icon" icon="eye_on"></app-icon>
+              <app-icon (click)="hide(shape)" class="area--icon" icon="eye_on"></app-icon>
             </div>
           </div>
         </div>

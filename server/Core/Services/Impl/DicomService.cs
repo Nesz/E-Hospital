@@ -11,6 +11,7 @@ using Core.Models;
 using Core.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.OpenApi.Extensions;
 using MongoDB.Bson;
 using MongoDB.Driver.GridFS;
 using Parser;
@@ -113,8 +114,10 @@ public class DicomService : IDicomService
             await _unitOfWork.Series.Add(series);
         }
 
-        // override patient id to ours.
+        // override patient related tags
         dicom.GetEntryByTag(DicomConstats.PatientId).Value = patientId.ToString();
+        dicom.GetEntryByTag(DicomConstats.PatientName).Value = $"{user.FirstName} {user.LastName}";
+        dicom.GetEntryByTag(DicomConstats.PatientGender).Value = user.Gender.GetDisplayName();
 
         var frame = dicom.Dataset[DicomConstats.PixelData].GetAsListBytes()[0];
         dicom.Dataset.Remove(DicomConstats.PixelData);

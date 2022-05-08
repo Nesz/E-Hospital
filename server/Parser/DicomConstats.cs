@@ -10,6 +10,8 @@ public class DicomConstats
     public const string SequenceItemEnd   = "FFFEE00D";
     public const string SequenceEnd       = "FFFEE0DD";
     public const string PatientId         = "00100020";
+    public const string PatientName       = "00100010";
+    public const string PatientGender     = "00100040";
     public const string StudyDate         = "00080020";
     public const string StudyTime         = "00080030";
     public const string SeriesId          = "0020000E";

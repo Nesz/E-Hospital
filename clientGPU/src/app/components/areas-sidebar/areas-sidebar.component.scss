@@ -120,6 +120,7 @@
     width: 24px;
     height: 24px;
     cursor: pointer;
+    user-select: none;
 
     &__wrapper {
       display: flex;
@@ -137,6 +138,18 @@
   }
 
   &--details {
+
+  }
+}
+
+.info {
+  padding-left: 5px;
+  padding-right: 5px;
+  color: white;
+  &__header {
+    font-weight: 600;
+  }
+  &__desc {
 
   }
 }
