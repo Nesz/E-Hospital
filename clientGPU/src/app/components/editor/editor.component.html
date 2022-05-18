@@ -34,6 +34,11 @@
       <app-icon class="tools--list--entry__icon" icon="camera"></app-icon>
       <span class="tools--list--entry__tooltip">Export</span>
     </span>
+
+    <span class="tools--list--entry" (click)="reset()">
+      <app-icon class="tools--list--entry__icon" icon="reset"></app-icon>
+      <span class="tools--list--entry__tooltip">Reset</span>
+    </span>
   </div>
 
   <app-areas-sidebar
@@ -42,14 +47,14 @@
     [shapes]="shapes">
   </app-areas-sidebar>
 
-  <div [class.loading--background]="progress.now !== progress.full" #parent class="editor--wrapper">
-    <div class="loading--wrapper" *ngIf="progress.now !== progress.full && !progressIndicator?.ringClosed">
+  <div #parent class="editor--wrapper">
+    <div class="loading--wrapper" *ngIf="download?.state !== 'DONE'">
       <div class="loading">
         <app-progress-ring
           #progressIndicator
           [radius]="150"
           [stroke]="8"
-          [progress]="progress.percentage"
+          [progress]="download?.progress ?? 0"
           label="Downloading slices"
         ></app-progress-ring>
       </div>

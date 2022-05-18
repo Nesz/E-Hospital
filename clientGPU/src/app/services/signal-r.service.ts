@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HubConnection, HubConnectionBuilder, IHttpConnectionOptions } from "@microsoft/signalr";
-import { BehaviorSubject, of } from "rxjs";
+import { BehaviorSubject } from "rxjs";
 import { distinctUntilKeyChanged, map } from "rxjs/operators";
 
 export interface Progress {

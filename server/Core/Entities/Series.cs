@@ -14,6 +14,8 @@ public class Series
     public string Description { get; set; }
     public string Modality { get; set; }
     public DateTime Date { get; set; }
+    
+    public string FilePath { get; set; }
     public virtual Study Study { get; set; }
     public virtual List<Instance> Instances { get; set; }
     public virtual List<Area> Areas { get; set; }

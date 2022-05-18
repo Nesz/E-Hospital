@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthenticationService } from "../../services/authentication.service";
-import { Form, FormBuilder, FormGroup, Validators } from "@angular/forms";
+import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
 import { SignalRService } from "../../services/signal-r.service";
-import { Role } from "../../model/enums";
+import { Role } from "../../model/interfaces";
 
 @Component({
   selector: 'app-login',

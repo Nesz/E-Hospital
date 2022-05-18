@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Input, OnInit, SimpleChanges, ViewEncapsulation } from "@angular/core";
+import { Component, Input, OnInit, SimpleChanges} from "@angular/core";
 import { IconRegistryService } from "../../services/icon-registry.service";
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -6,7 +6,6 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   selector: 'app-icon',
   templateUrl: './icon.component.html',
   styleUrls: ['./icon.component.scss'],
-  //encapsulation: ViewEncapsulation.None
 })
 export class IconComponent implements OnInit {
 

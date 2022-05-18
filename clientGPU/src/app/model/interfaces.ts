@@ -1,28 +1,33 @@
 import { EditorComponent } from "../components/editor/editor.component";
-import { Gender, Role } from "./enums";
 import { Header } from "../components/table/table.component";
+import { CanvasPartComponent } from "../components/canvas-part/canvas-part.component";
+import { mat3, vec2 } from "gl-matrix";
 
 export interface Windowing {
   ww: number;
   wc: number;
-  min: number;
-  max: number;
+}
+
+export class Dictionary<T> {
+  [Key: string]: T;
 }
 
 export interface HeaderSorted<T> extends Header<T> {
   efField: string
 }
 
-export interface Shape {
+
+export interface Measurement {
   id: number,
   label: string;
   description: string;
   slice: number;
-  orientation: 'x' | 'y' | 'z';
-  vertices: number[];
+  orientation: Orientation;
+  vertices: vec2[];
   isVisible: boolean;
   isSelected: boolean;
   detailsToggled: boolean;
+  type: MeasurementType;
 }
 
 export interface User {
@@ -36,18 +41,88 @@ export interface User {
   gender: Gender
 }
 
-export interface Tool {
-  readonly toolName: string;
-  readonly toolIcon: string;
-  readonly extraOptions: any;
+export enum OrderDirection {
+  ASCENDING = 'ASCENDING',
+  DESCENDING = 'DESCENDING',
+}
 
-  onExtraOption(index: number, editor: EditorComponent): void;
+export enum Role {
+  Admin = 'Admin',
+  Doctor = 'Doctor',
+  Patient = 'Patient'
+}
 
-  onScroll(event: WheelEvent, editor: EditorComponent): void;
+export enum Gender {
+  MALE,
+  FEMALE
+}
 
-  onMouseDown(event: MouseEvent, editor: EditorComponent): void;
+export interface Page<T> {
+  pageCurrent: number,
+  pageOrder: string,
+  pageSize: number,
+  pageTotal: number,
+  orderDirection: OrderDirection,
+  data: T[]
+}
 
-  onMouseMove(event: MouseEvent, editor: EditorComponent): void;
+export enum Orientation {
+  TOP = 0,
+  LEFT = 1,
+  RIGHT = 2,
+  BOTTOM = 3,
+  FRONT = 4,
+  BACK = 5
+}
 
-  onMouseUp(event: MouseEvent, editor: EditorComponent): void;
+export type LookupTablesData = RawLutData[]
+
+export interface LookupTable {
+  name: string,
+  texture: WebGLTexture;
+}
+
+export interface RawLutData {
+  name: string;
+  r: number[];
+  g: number[];
+  b: number[];
+}
+
+export abstract class Tool {
+  public readonly toolName: string;
+  public readonly toolIcon: string;
+  public readonly editor: EditorComponent;
+
+  constructor(toolIcon: string, toolName: string, editor: EditorComponent) {
+    this.toolIcon = toolIcon;
+    this.toolName = toolName;
+    this.editor = editor;
+  }
+
+  public abstract onScroll(event: WheelEvent): void;
+
+  public abstract onMouseDown(event: MouseEvent): void;
+
+  public abstract onMouseMove(event: MouseEvent): void;
+
+  public abstract onMouseUp(event: MouseEvent): void;
+
+  protected getRealCanvasPos(canvasPart: CanvasPartComponent, x: number, y: number): vec2 {
+    const bbox = canvasPart.canvas.nativeElement.getBoundingClientRect()!;
+    const clipPos = this.editor.getClipSpaceMousePositionVec2(x, y, bbox);
+
+    const matrix = mat3.create();
+    mat3.invert(matrix, canvasPart.camera.viewProjectionMat);
+
+    const canvasCoords = vec2.fromValues(clipPos[0], clipPos[1]);
+    vec2.transformMat3(canvasCoords, canvasCoords, matrix);
+    return canvasCoords;
+  }
+}
+
+export enum MeasurementType {
+  DISTANCE,
+  ANGLE,
+  RECTANGLE,
 }

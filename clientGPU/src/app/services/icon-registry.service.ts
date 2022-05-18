@@ -4,6 +4,7 @@ import { of } from "rxjs";
 import { map } from "rxjs/operators";
 
 const ICONS = [
+  'reset',
   'eye_on',
   'eye_off',
   'delete',

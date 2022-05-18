@@ -1,9 +1,8 @@
 import { AfterViewInit, Component, ViewChild, ViewEncapsulation } from "@angular/core";
-import { ApiService, Series } from "../../services/api.service";
-import { Header, TableComponent } from "../../components/table/table.component";
+import { ApiService } from "../../services/api.service";
+import { TableComponent } from "../../components/table/table.component";
 import { Router } from "@angular/router";
-import { HeaderSorted, User } from "../../model/interfaces";
-import { OrderDirection, Role } from "../../model/enums";
+import { HeaderSorted, OrderDirection, Role, User } from "../../model/interfaces";
 
 @Component({
   selector: 'app-patients',

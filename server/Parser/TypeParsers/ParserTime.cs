@@ -14,8 +14,20 @@ public class ParserTime : IDataTypeParser
             return TimeSpan.Zero;
         }
             
+        
+        
+        if (timeString.Contains("\\"))
+        {
+            return timeString.Split("\\")
+                .Select(x => x.Trim())
+                .Select(x =>
+                {
+                    var format = timeString.Contains(".") ? @"hmmss\.FFFFFF" : "hmmss";
+                    return TimeSpan.ParseExact(x, format, CultureInfo.InvariantCulture);
+                }).ToList();
+        }
+
         var format = timeString.Contains(".") ? @"hmmss\.FFFFFF" : "hmmss";
-            
         return TimeSpan.ParseExact(timeString, format, CultureInfo.InvariantCulture);
     }
 }

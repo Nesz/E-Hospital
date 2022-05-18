@@ -4,12 +4,15 @@ import {
   ElementRef,
   EventEmitter,
   Input,
-  NgZone, OnDestroy,
+  NgZone,
+  OnDestroy,
   Output,
   ViewChild
 } from "@angular/core";
-import { CanvasDrawingArea, EditorComponent } from "../editor/editor.component";
+import { EditorComponent } from "../editor/editor.component";
 import { FpsLoop } from "../../helpers/fps-loop";
+import { Camera } from "../../model/camera";
+import { LookupTable, Orientation, Windowing } from "../../model/interfaces";
 
 @Component({
   selector: 'app-canvas-part',
@@ -17,32 +20,34 @@ import { FpsLoop } from "../../helpers/fps-loop";
   styleUrls: ['./canvas-part.component.scss']
 })
 export class CanvasPartComponent implements AfterViewInit, OnDestroy {
-  editor!: EditorComponent;
-  isRendered = false;
   @ViewChild('canvas') canvas!: ElementRef<HTMLDivElement>
+  @ViewChild('canvas2d') canvas2d!: ElementRef<HTMLCanvasElement>
   @Input() whenDestroyed: () => void = () => {};
-  @Input() canvasPart!: CanvasDrawingArea;
-  @Input() slices!: {
-    width: number;
-    height: number;
-    slices: WebGLTexture[];
-  };
-  @Output() onAxisChange = new EventEmitter<CanvasPartComponent>();
-  @Output() onSliceChange = new EventEmitter<CanvasPartComponent>();
+  @Output() onChanges = new EventEmitter<CanvasPartComponent>();
   @Output() onResize = new EventEmitter<CanvasPartComponent>();
+
+  editor!: EditorComponent;
+  lut!: LookupTable;
+  camera!: Camera;
+  currentSlice!: number;
+  orientation!: Orientation;
+  windowing!: Windowing;
+  context2D!: CanvasRenderingContext2D;
+
+  isRendered = false;
   fps = 30;
-  timer = new FpsLoop(this.fps, (_: any) => this.nextSlice());
+  timer = new FpsLoop(this.fps, () => this.nextSlice());
 
   constructor(
     private readonly zone: NgZone
   ) { }
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     this.whenDestroyed();
   }
 
-  ngAfterViewInit() {
-    const observer = new ResizeObserver((_) => {
+  public ngAfterViewInit(): void {
+    const observer = new ResizeObserver(() => {
       this.zone.run(() => {
         this.resetPosition();
         this.onResize.emit(this);
@@ -51,36 +56,47 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
 
     observer.observe(this.canvas.nativeElement);
     this.isRendered = true;
+
+    this.context2D = this.canvas2d.nativeElement.getContext('2d', {
+      alpha: true,
+      desynchronized: true
+    })!;
+
   }
 
-  getWidth = () =>
-    this.editor.getOrientationSlices(this.canvasPart.orientation).width;
+  public getTextureDimensions() {
+    return this.editor.getDimensionsForOrientation(this.orientation);
+  }
 
-  getHeight = () =>
-    this.editor.getOrientationSlices(this.canvasPart.orientation).height;
-
-  resetPosition = () => {
+  public resetPosition() {
+    this.camera = new Camera();
     const bbox = this.canvas?.nativeElement?.getBoundingClientRect();
     if (bbox) {
+      const dimensions = this.getTextureDimensions();
       const [scale, offX, offY] = this.calculateAspectRatio({
         width: bbox.width,
         height: bbox.height,
-        elWidth: this.editor.orientation[this.canvasPart.orientation].width,
-        elHeight: this.editor.orientation[this.canvasPart.orientation].height,
+        elWidth: dimensions.width,
+        elHeight: dimensions.height,
       });
 
-      this.canvasPart.camera.zoom = scale;
-      this.canvasPart.camera.x = -offX;
-      this.canvasPart.camera.y = -offY;
+      this.camera.zoom = scale;
+      this.camera.x = -offX;
+      this.camera.y = -offY;
+      this.canvas2d.nativeElement.width = bbox.width;
+      this.canvas2d.nativeElement.height = bbox.height;
+      //const ctx = this.canvas2d.nativeElement.getContext('2d')!;
+      //ctx.translate(-offX, -offY);
+      //ctx.scale(scale, scale);
     }
   }
 
-  calculateAspectRatio = (dimensions: {
+  public calculateAspectRatio(dimensions: {
     width: number;
     height: number;
     elWidth: number;
     elHeight: number;
-  }) => {
+  }) {
     const { width, height, elWidth, elHeight } = dimensions;
 
     const scaleX = width / elWidth;
@@ -94,48 +110,68 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
     ];
   };
 
-  nextSlice() {
-    if (this.canvasPart.currentSlice === this.editor.orientation[this.canvasPart.orientation].slices.length) {
-      this.canvasPart.currentSlice = 0;
+  public nextSlice() {
+    if (this.currentSlice === this.editor.slicesCountForOrientation(this.orientation)) {
+      this.currentSlice = 0;
     }
-    this.canvasPart.currentSlice++;
-    this.onSliceChange.emit(this);
+    this.currentSlice++;
+    this.onChanges.emit(this);
   }
 
-  changeAxis($event: Event) {
-    // @ts-ignore
-    this.canvasPart.orientation = ($event.target as HTMLInputElement).value;
-    this.slices = this.editor.getOrientationSlices(this.canvasPart.orientation)
-    this.canvasPart.currentSlice = 0;
+  public changeAxis($event: Event) {
+    this.orientation = this.orientationEnumFromString(($event.target as HTMLInputElement).value);
+    this.currentSlice = 0;
     this.resetPosition();
-    this.onAxisChange.emit(this);
+    this.onChanges.emit(this);
   }
 
-  changeSlice($event: Event) {
-    this.canvasPart.currentSlice = Number(($event.target as HTMLInputElement).value);
-    this.onSliceChange.emit(this);
+  public changeSlice($event: Event) {
+    this.currentSlice = Number(($event.target as HTMLInputElement).value);
+    this.onChanges.emit(this);
   }
 
-  windowingChanged(type: string, $event: Event) {
+  public windowingChanged(type: string, $event: Event) {
     const newVal = Number(($event.target as HTMLInputElement).value);
     if (type === 'wc')
-      this.canvasPart.windowing[type] = newVal;
+      this.windowing.wc = newVal;
     else
-      this.canvasPart.windowing.ww = newVal;
+      this.windowing.ww = newVal;
 
-    this.editor.render(this);
+    this.onChanges.emit(this);
   }
 
-  fpsChanged($event: Event) {
+  public fpsChanged($event: Event) {
     this.fps = Number(($event.target as HTMLInputElement).value);
     this.timer.changeFPS(this.fps)
   }
 
-  togglePlayer() {
+  public togglePlayer() {
     if (this.timer.isPlaying) {
       this.timer.stop();
     } else {
       this.timer.start();
     }
+  }
+
+  getOrientationName() {
+    return Orientation[this.orientation];
+  }
+
+  private orientationEnumFromString(orientation: string) {
+    switch (orientation) {
+      case 'top': return Orientation.TOP;
+      case 'left': return Orientation.LEFT;
+      case 'right': return Orientation.RIGHT;
+      case 'bottom': return Orientation.BOTTOM;
+      case 'front': return Orientation.FRONT;
+      case 'back': return Orientation.BACK;
+      default: throw 'bad orientation';
+    }
+  }
+
+  changeLut($event: Event) {
+    this.lut = this.editor.lookupTables
+      .find(lut => lut.name === ($event.target as HTMLInputElement).value)!;
+    this.onChanges.emit(this);
   }
 }

@@ -11,6 +11,13 @@ public class ParserDate : IDataTypeParser
         if (string.IsNullOrEmpty(dateString))
             return dateString;
 
+        if (dateString.Contains("\\"))
+        {
+            return dateString.Split("\\")
+                .Select(x => x.Trim())
+                .Select(x => DateTime.ParseExact(x, "yyyyMMdd", CultureInfo.InvariantCulture)).ToList();
+        }
+
         return DateTime.ParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture);
     }
 }

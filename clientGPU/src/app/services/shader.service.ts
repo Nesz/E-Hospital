@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin, Observable } from "rxjs";
+import { forkJoin } from "rxjs";
 import { map } from 'rxjs/operators';
 
 export interface Uniforms {

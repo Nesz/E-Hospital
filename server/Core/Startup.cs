@@ -58,7 +58,7 @@ public class Startup
             .AddScoped<ISeriesService, SeriesService>()
             .AddScoped<IUserService, UserService>()
             .AddScoped<IDicomService, DicomService>()
-            .AddScoped<IMongoService, MongoService>()
+            .AddScoped<DicomStorageService >()
             .AddScoped<IUserAccessor, UserAccessor>()
             .AddScoped<IPasswordHasher<User>, BCryptPasswordHasher<User>>()
 

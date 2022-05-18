@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -22,20 +23,20 @@ public class DicomService : IDicomService
 {
 
     private readonly IHubContext<ProgressHub> _progressHub;
+    private readonly DicomStorageService _dicomStorageService;
     private readonly IUserAccessor _userAccessor;
-    private readonly IMongoService _mongoService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public DicomService(
         IHubContext<ProgressHub> progressHub, 
-        IUserAccessor userAccessor, 
-        IMongoService mongoService, 
+        DicomStorageService dicomStorageService, 
+        IUserAccessor userAccessor,
         IUnitOfWork unitOfWork, 
         IMapper mapper)
     {
+        _dicomStorageService = dicomStorageService;
         _progressHub = progressHub;
-        _mongoService = mongoService;
         _userAccessor = userAccessor;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
@@ -109,7 +110,8 @@ public class DicomService : IDicomService
                 Description = dicom.Dataset.GetValue(DicomConstats.SeriesDescription)?.GetAsString()?.Trim(),
                 OriginalId = seriesOriginalId,
                 Modality = dicom.Dataset[DicomConstats.Modality].GetAsString().Trim(),
-                Study = study
+                Study = study,
+                FilePath = Path.Combine(_dicomStorageService.Storage, $"{seriesOriginalId}.bin")
             };
             await _unitOfWork.Series.Add(series);
         }
@@ -119,23 +121,25 @@ public class DicomService : IDicomService
         dicom.GetEntryByTag(DicomConstats.PatientName).Value = $"{user.FirstName} {user.LastName}";
         dicom.GetEntryByTag(DicomConstats.PatientGender).Value = user.Gender.GetDisplayName();
 
+        
         var frame = dicom.Dataset[DicomConstats.PixelData].GetAsListBytes()[0];
+        var rom = new ReadOnlyMemory<byte>(frame);
         dicom.Dataset.Remove(DicomConstats.PixelData);
 
-        var sliceMongoId = await _mongoService.UploadFile(file.Name, frame, new GridFSUploadOptions
-        {
-            Metadata = BsonDocument.Parse(JsonSerializer.Serialize(dicom, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = new LowercaseJsonNamingPolicy(),
-            }))
-        });
-
+        var pInstance = await _unitOfWork.Instances.GetPrevious(dicom.Dataset[DicomConstats.InstanceId].GetAsInt());
         var instance = new Instance
         {
-            MongoId = sliceMongoId.ToString(),
             OriginalId = dicom.Dataset[DicomConstats.InstanceId].GetAsInt(),
-            Series = series
+            Series = series,
+            ChunkSize = rom.Length,
+            FileOffset = pInstance?.OriginalId * rom.Length ?? 0,
+            DicomMeta = JsonSerializer.Serialize(dicom, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = new LowercaseJsonNamingPolicy(),
+            })
         };
+
+        await _dicomStorageService.WriteBytesForInstance(instance, rom);
 
         await _unitOfWork.Instances.Add(instance);
             

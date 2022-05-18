@@ -2,24 +2,37 @@
   <div class="canvas-part--header__wrapper">
     <div class="canvas-part--header">
       <div class="setting">
-        <span>Orientation</span>
+        <span>LUT</span>
         <select
           class="canvas-part--header__axis"
-          [value]="canvasPart.orientation"
+          [value]="lut.name"
+          (change)="changeLut($event)"
+        >
+          <option [value]="lut.name" *ngFor="let lut of editor.lookupTables">{{ lut.name }}</option>
+        </select>
+      </div>
+      <div class="setting">
+        <span>View</span>
+        <select
+          class="canvas-part--header__axis"
+          [value]="orientation"
           (change)="changeAxis($event)"
         >
-          <option value="x">Sagittal (x axis)</option>
-          <option value="y">Coronal (y axis)</option>
-          <option value="z">Transverse (z axis)</option>
+          <option value="top">Top</option>
+          <option value="left">Left</option>
+          <option value="right">Right</option>
+          <option selected value="bottom">Bottom</option>
+          <option value="front">Front</option>
+          <option value="back">Back</option>
         </select>
       </div>
       <div class="setting">
         <span>WC</span>
-        <input type="number" [value]="canvasPart.windowing.wc" (input)="windowingChanged('wc', $event)">
+        <input type="number" [value]="windowing.wc" (input)="windowingChanged('wc', $event)">
       </div>
       <div class="setting">
         <span>WW</span>
-        <input type="number" [value]="canvasPart.windowing.ww" (input)="windowingChanged('ww', $event)">
+        <input type="number" [value]="windowing.ww" (input)="windowingChanged('ww', $event)">
       </div>
       <div class="player">
         <app-icon
@@ -38,22 +51,24 @@
       </div>
     </div>
   </div>
-  <div #canvas id="draw-area" class="canvas-part__draw-area"></div>
+  <div #canvas id="draw-area" class="canvas-part__draw-area">
+    <canvas #canvas2d class="wrapper2d"></canvas>
+  </div>
   <div class="canvas-part--slider">
     <div class="canvas-part--slider__holder">
       <input
         type="range"
         name="frame"
         min="0"
-        max="{{ slices.slices.length - 1 }}"
-        [value]="canvasPart.currentSlice"
+        max="{{ editor.slicesCountForOrientation(orientation) }}"
+        [value]="currentSlice"
         (input)="changeSlice($event)"
       />
     </div>
   </div>
   <div class="debug">
-    <div class="debug__text">Slice: {{ canvasPart.currentSlice }}</div>
-    <div class="debug__text">Zoom: {{ canvasPart.camera.zoom.toFixed(2) }} </div>
-    <div class="debug__text">Size: {{ getWidth() }}x{{ getHeight() }}</div>
+    <div class="debug__text">Slice: {{ currentSlice }}</div>
+    <div class="debug__text">Zoom: {{ camera.zoom.toFixed(2) }} </div>
+    <div class="debug__text">Size: {{ getTextureDimensions().width }}x{{ getTextureDimensions().height }}</div>
   </div>
 </div>

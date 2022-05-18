@@ -4,10 +4,7 @@ import { Camera } from '../camera';
 import { CanvasPartComponent } from "../../components/canvas-part/canvas-part.component";
 import { Tool } from "../interfaces";
 
-export class RotateTool implements Tool {
-  public readonly toolIcon = 'rotate';
-  public readonly toolName = 'Rotate';
-  public readonly extraOptions = [];
+export class RotateTool extends Tool {
 
   private _startPoint = vec2.create();
   private _dragging = false;
@@ -15,14 +12,10 @@ export class RotateTool implements Tool {
   private canvasPart!: CanvasPartComponent;
   private startCamera!: Camera;
 
-  onExtraOption = (index: number, editor: EditorComponent) => {};
-  onScroll = (event: WheelEvent, editor: EditorComponent) => {};
+  public onScroll = (event: WheelEvent) => {};
 
-  onMouseDown = (event: MouseEvent, editor: EditorComponent) => {
-    const canvasPart = editor.getCanvasPartFromMousePosition(
-      event.clientX,
-      event.clientY
-    );
+  public onMouseDown = (event: MouseEvent) => {
+    const canvasPart = this.editor.getCanvasPartFromMousePosition(event.clientX, event.clientY);
 
     if (canvasPart != null) {
       this._dragging = true;
@@ -31,7 +24,7 @@ export class RotateTool implements Tool {
     }
   };
 
-  public onMouseMove(event: MouseEvent, editor: EditorComponent): void {
+  public onMouseMove = (event: MouseEvent) => {
     if (this._dragging) {
       event.preventDefault();
       const delta =
@@ -41,40 +34,40 @@ export class RotateTool implements Tool {
       // compute a matrix to pivot around the camera space startPos
       const camMat = mat3.create();
       //mat3.projection(camMat, editor.context.canvas.width, editor.context.canvas.height);
-      const orientation = editor.getOrientationSlices(this.canvasPart.canvasPart.orientation);
+      const dimensions = this.editor.getDimensionsForOrientation(this.canvasPart.orientation);
       mat3.translate(
         camMat,
         camMat,
-        vec2.fromValues(orientation.width / 2, orientation.height / 2)
+        vec2.fromValues(dimensions.width / 2, dimensions.height / 2)
       );
       mat3.rotate(camMat, camMat, delta);
       mat3.translate(
         camMat,
         camMat,
-        vec2.fromValues(-orientation.width / 2, -orientation.height / 2)
+        vec2.fromValues(-dimensions.width / 2, -dimensions.height / 2)
       );
 
-      this.canvasPart.canvasPart.camera.updateViewProjection(
-        editor.context.canvas.width,
-        editor.context.canvas.height
+      this.canvasPart.camera.updateViewProjection(
+        this.editor.context.canvas.width,
+        this.editor.context.canvas.height
       );
       //mat3.translate(camMat, camMat, vec2.fromValues(editor.camera.x, editor.camera.y));
 
       // multply in the original camera matrix
-      this.startCamera = Object.assign({}, this.canvasPart.canvasPart.camera);
-      mat3.multiply(camMat, camMat, this.canvasPart.canvasPart.camera.makeCameraMatrix());
+      this.startCamera = Object.assign({}, this.canvasPart.camera);
+      mat3.multiply(camMat, camMat, this.canvasPart.camera.makeCameraMatrix());
 
       // now we can set the rotation and get the needed
       // camera position from the matrix
-      this.canvasPart.canvasPart.camera.rotation = this.startCamera.rotation + delta;
-      this.canvasPart.canvasPart.camera.x = camMat[6];
-      this.canvasPart.canvasPart.camera.y = camMat[7];
+      this.canvasPart.camera.rotation = this.startCamera.rotation + delta;
+      this.canvasPart.camera.x = camMat[6];
+      this.canvasPart.camera.y = camMat[7];
 
-      editor.render(this.canvasPart);
+      this.editor.render(this.canvasPart);
     }
   }
 
-  public onMouseUp(event: MouseEvent, editor: EditorComponent): void {
+  public onMouseUp = (event: MouseEvent) => {
     if (this._dragging) {
       this._dragging = false;
     }

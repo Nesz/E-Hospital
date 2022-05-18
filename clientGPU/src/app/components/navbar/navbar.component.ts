@@ -1,8 +1,7 @@
 import { Component, ElementRef, ViewChild, ViewEncapsulation } from "@angular/core";
 import { Router } from "@angular/router";
 import { AuthenticationService } from "../../services/authentication.service";
-import { User } from "../../model/interfaces";
-import { Role } from "../../model/enums";
+import { Role, User } from "../../model/interfaces";
 
 @Component({
   selector: 'app-navbar',
@@ -15,7 +14,6 @@ export class NavbarComponent {
   isUserMenuEnabled = false;
   role = Role;
   user?: User;
-
 
   constructor(
     private readonly router: Router,
