@@ -1,0 +1,10 @@
+<div class="slider">
+  <div>{{label}} {{value}} {{unit}}</div>
+  <div class="slider__wrapper">
+    <input type="range" [min]="min" [max]="max" [value]="value" (input)="onChange($event)" />
+    <div class="min-max">
+      <span class="min">{{min}} {{unit}}</span>
+      <span class="max">{{max}} {{unit}}</span>
+    </div>
+  </div>
+</div>

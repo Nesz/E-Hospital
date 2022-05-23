@@ -11,6 +11,7 @@ import { PatientsComponent } from "./pages/patients/patients.component";
 import { NotAuthenticatedGuard } from "./guards/not-authenticated.guard";
 import { PatientComponent } from "./pages/patient/patient.component";
 import { SignalRService } from "./services/signal-r.service";
+import { IconRegistryService } from "./services/icon-registry.service";
 
 const initializer = (auth: AuthenticationService, signalR: SignalRService): (() => Promise<void>) => {
   if (!localStorage.getItem('access_token')) {
@@ -25,6 +26,15 @@ const initializer = (auth: AuthenticationService, signalR: SignalRService): (() 
         console.log(result)
         return signalR.startConnection();
       })
+      .catch((error) => console.log(error))
+};
+
+const initializeTags = (icons: IconRegistryService): (() => Promise<void>) => {
+  return () =>
+    icons
+      .loadDefinitions()
+      .toPromise()
+      .then((result) => console.log(result))
       .catch((error) => console.log(error))
 };
 
@@ -71,6 +81,12 @@ const routes: Routes = [
       provide: APP_INITIALIZER,
       useFactory: initializer,
       deps: [AuthenticationService, SignalRService],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeTags,
+      deps: [IconRegistryService],
       multi: true,
     },
   ],

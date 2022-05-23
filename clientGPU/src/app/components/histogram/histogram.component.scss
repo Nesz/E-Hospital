@@ -1,0 +1,11 @@
+.histogram {
+  width: 100%;
+  height: 800px;
+  background: #000;
+  image-rendering: pixelated;
+
+}
+
+:host {
+  display: contents;
+}

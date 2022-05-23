@@ -4,7 +4,7 @@ import {
   Component,
   ComponentFactoryResolver,
   ComponentRef,
-  ElementRef,
+  ElementRef, forwardRef,
   NgZone,
   OnDestroy,
   OnInit,
@@ -13,33 +13,37 @@ import {
 } from "@angular/core";
 import { ProgressRingComponent } from "../progress-ring/progress-ring.component";
 import {
+  fastMax, fastMin,
   generate3DTexture,
-  getAngle, getAreaMM,
+  getAngle,
+  getAreaMM,
   getDistanceMM,
   isInsideBoundsBBox,
-  loadLUT, toRectangle
+  loadLUT
 } from "../../helpers/canvas.helper";
 import { debounceTime, map, tap } from "rxjs/operators";
 import { ShaderService } from "../../services/shader.service";
 import { ApiService } from "../../services/api.service";
 import { ActivatedRoute } from "@angular/router";
 import { Camera } from "../../model/camera";
-import { Dicom } from "../../model/dicom";
+import { Dicom, Sequence } from "../../model/dicom";
 import * as GLM from "gl-matrix";
+import { vec2 } from "gl-matrix";
 import { Tag } from "../../tag";
 import { CanvasPartComponent } from "../canvas-part/canvas-part.component";
 import { Shader } from "../../model/shader";
 import {
+  Layout,
   LookupTable,
   LookupTablesData,
-  MeasurementType,
-  Orientation,
   Measurement,
+  MeasurementType,
+  Plane,
+  SidebarMode,
   Tool,
   Windowing
 } from "../../model/interfaces";
 import { HttpClient } from "@angular/common/http";
-import { vec2 } from "gl-matrix";
 import { Download } from "../../model/download";
 import { CursorTool } from "../../model/impl/cursor.tool";
 import { PanTool } from "../../model/impl/pan.tool";
@@ -50,6 +54,10 @@ import { ArbitraryAreaTool } from "../../model/impl/arbitrary-area.tool";
 import { RectangularArea } from "../../model/impl/reactangular-area.tool";
 import { DistanceTool } from "../../model/impl/distance.tool";
 import { AngleTool } from "../../model/impl/angle.tool";
+import { TableData } from "../nestable-table/nestable-table.component";
+import { IconRegistryService } from "../../services/icon-registry.service";
+import { layouts } from "../../dicom.constants";
+import { Settings } from "../settings/settings.component";
 
 @Component({
   selector: 'app-editor',
@@ -63,8 +71,12 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   @ViewChild('sidebar') sidebar!: ElementRef<HTMLDivElement>;
   @ViewChild('parent') parent!: ElementRef<HTMLSpanElement>;
 
+  readonly SidebarMode: typeof SidebarMode = SidebarMode;
+  sidebarMode: SidebarMode = SidebarMode.NONE;
+
   seriesId!: number;
   sidebarActive = true;
+  tagsActive = false;
 
   shapes: Measurement[] = [];
 
@@ -88,8 +100,9 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
   tool = this.tools[0];
 
+  currentCanvas!: CanvasPartComponent;
   canvasResolution$ = new BehaviorSubject<{ width: number; height: number; }>({ width: 0, height: 0 });
-
+  public tagsTable!: TableData;
   public props!: {
     pixelSpacing: number[],
     sliceCount: number,
@@ -105,15 +118,20 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   private texCoordBuffer!: WebGLBuffer;
   private texCoordLocation!: number;
   private positionLocation!: number;
+  private texCoordLocationH!: number;
+  private positionLocationH!: number;
 
   private programs: { [key: string]: Shader } = {};
   public lookupTables!: LookupTable[];
-  // progress = new Progress(1, 0);
+
   download$!: Observable<Download>
   download?: Download
 
+  buckets!: any;
+
   constructor(
     private readonly httpClient: HttpClient,
+    private readonly iconService: IconRegistryService,
     private readonly resolver: ComponentFactoryResolver,
     private readonly shaderService: ShaderService,
     private readonly route: ActivatedRoute,
@@ -121,20 +139,18 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     private readonly zone: NgZone
   ) {}
 
-  public slicesCountForOrientation(orientation: Orientation): number {
-    switch (orientation) {
-      case Orientation.TOP:
-      case Orientation.BOTTOM:
+  public slicesCountForPlane(plane: Plane): number {
+    switch (plane) {
+      case Plane.TRANSVERSE:
         return this.props.sliceCount;
       default:
         return this.props.width;
     }
   }
 
-  public getDimensionsForOrientation(orientation: Orientation): { width: number, height: number } {
-    switch (orientation) {
-      case Orientation.TOP:
-      case Orientation.BOTTOM:
+  public getDimensionsForPlane(plane: Plane): { width: number, height: number } {
+    switch (plane) {
+      case Plane.TRANSVERSE:
         return { width: this.props.width, height: this.props.height };
       default:
         return { width: this.props.width, height: this.props.sliceCount };
@@ -142,16 +158,6 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   public onShapeFinish(shape: Measurement) {
-
-    // const context2D = this.canvas.nativeElement.getContext('2d')!;
-    // context2D.lineWidth = 3;
-    // context2D.strokeStyle = 'yellow';
-    // context2D.fillStyle = 'white';
-    // context2D.beginPath();
-    // context2D.moveTo(shape.vertices[0], shape.vertices[1]);
-    // context2D.lineTo(shape.vertices[2], shape.vertices[3]);
-    // context2D.stroke();
-
     const routeParams = this.route.snapshot.paramMap;
     this.api.addArea(routeParams.get('seriesId')!, shape).subscribe(x => {
       console.log(x)
@@ -181,6 +187,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     .pipe(tap(() => this.progressIndicator.label = 'Generating textures'))
     .subscribe(([dicom, series, shapes, stream]) => {
       this.dicom = dicom;
+      this.tagsTable = this.buildTagsTable(this.dicom.dataset)
       this.shapes = shapes;
       const buffer = stream.content!;
 
@@ -197,6 +204,20 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
       console.log(dicom)
       console.log(dicom.asNumber(Tag.PIXEL_SPACING))
+
+      const [texture, buckets] = generate3DTexture({
+        gl: this.context,
+        buffer: buffer,
+        width: width,
+        height: height,
+        depth: series.instances.length,
+        sliceThickness: sliceThickness,
+        bitsPerPixel: bitsPerPixel,
+        pixelRepresentation: pixelRepresentation,
+      })
+
+      this.buckets = buckets;
+
       this.props = {
         sliceCount: series.instances.length,
         width: width,
@@ -204,22 +225,59 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         sliceThickness: sliceThickness,
         slope: slope,
         intercept: intercept,
-        pixelSpacing: dicom.asList<number>(Tag.PIXEL_SPACING),
-        texture3d: generate3DTexture({
-          gl: this.context,
-          buffer: buffer,
-          width: width,
-          height: height,
-          depth: series.instances.length,
-          sliceThickness: sliceThickness,
-          bitsPerPixel: bitsPerPixel,
-          pixelRepresentation: pixelRepresentation,
-        })!
+        pixelSpacing: dicom.asList<number>(Tag.PIXEL_SPACING).map(x => Number(x)),
+        texture3d: texture
       }
 
       forkJoin([this.loadLUTs(), this.initShaders()])
-        .subscribe(() => this.canvases.push(this.createCanvasPart()))
+        .subscribe(() => {
+          const part = this.createCanvasPart();
+          this.currentCanvas = part.instance;
+          this.canvases.push(part)
+        })
     });
+  }
+
+  public buildTagsTable(sq: Sequence) {
+    const table: TableData = {
+      headers: ['TAG ID', 'VR', 'NAME', 'VALUE'],
+      rows: []
+    };
+    Object.entries(sq.entries)
+      .forEach(e => {
+        if (e[1].vr === 'SQ') {
+          let combine:any[] = [];
+          for (let i = 0; i < e[1].value.length; ++i) {
+            combine.push({
+              isNested: false,
+              selfData: [],
+              data: [`ITEM -> ${i + 1}`, '', '', ''],
+            })
+            this.buildTagsTable(new Sequence(e[1].value[i])).rows
+              .forEach(r => {
+                combine.push(r)
+              })
+          }
+          table.rows.push({
+            isNested: true,
+            selfData: [this.formatTag(e[0]), e[1].vr, this.iconService.getTagDefinition(e[0]), ''],
+            data: combine
+          })
+        } else {
+          table.rows.push({
+            isNested: false,
+            selfData: [],
+            data: [this.formatTag(e[0]), e[1].vr, this.iconService.getTagDefinition(e[0]), e[1].value]
+          })
+        }
+      })
+    return table;
+  }
+
+  public formatTag(tagStr: string) {
+    const group = tagStr.substr(0, 4);
+    const tag = tagStr.substr(4);
+    return `(${group}, ${tag})`
   }
 
   public ngAfterViewInit() {
@@ -235,7 +293,16 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     observer.observe(this.parent.nativeElement);
 
     this.subs
-      .add(fromEvent<MouseEvent>(window, 'mousedown').subscribe((event) => this.tool.onMouseDown(event)))
+      .add(fromEvent<MouseEvent>(window, 'mousedown').subscribe((event) => {
+        const canvasPart = this.getCanvasPartFromMousePosition(event.x, event.y);
+        if (canvasPart) {
+          this.currentCanvas = canvasPart.instance;
+          this.canvases.forEach(ref => ref.location.nativeElement.children[0].style.border = '1px solid #12a5a4')
+          canvasPart.location.nativeElement.children[0].style.border = '1px solid red'
+          console.log(this.currentCanvas.plane)
+        }
+        this.tool.onMouseDown(event)
+      }))
       .add(fromEvent<MouseEvent>(window, 'mousemove').subscribe((event) => this.tool.onMouseMove(event)))
       .add(fromEvent<MouseEvent>(window, 'mouseup').subscribe((event) => this.tool.onMouseUp(event)))
       .add(fromEvent<WheelEvent>(window, 'wheel').subscribe((event) => this.tool.onScroll(event)))
@@ -269,18 +336,103 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     }
   }
 
-  public oti(o: Orientation) {
+  public oti(o: Plane) {
     switch (o) {
-      case Orientation.TOP: return 0;
-      case Orientation.LEFT: return 1;
-      case Orientation.RIGHT: return 2;
-      case Orientation.BOTTOM: return 3;
-      case Orientation.FRONT: return 4;
-      case Orientation.BACK: return 5;
+      case Plane.TRANSVERSE: return 0;
+      case Plane.SAGITTAL: return 1;
+      case Plane.CORONAL: return 2;
     }
   }
 
+
+  public readCurrentSlicePixels() {
+    const gl = this.context;
+    const canvasPart = this.currentCanvas;
+
+    const { width, height } = this.getDimensionsForPlane(canvasPart.plane);
+
+    const shader = this.programs['histogram'];
+    gl.disable(gl.SCISSOR_TEST)
+    gl.viewport(0, 0, width, height);
+    gl.useProgram(shader.program);
+
+    {
+      const positionLocation = gl.getAttribLocation(shader.program, 'a_position');
+      const positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1, -1, -1, 1, 1, -1,
+        1, 1, 1, -1, -1, 1,
+      ]), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(positionLocation);
+      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+      const texCoordLocation = gl.getAttribLocation(shader.program, "a_texCoord");
+      const texCoordBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        0.0, 1.0,
+        0.0, 0.0,
+        1.0, 1.0,
+        1.0, 0.0,
+        1.0, 1.0,
+        0.0, 0.0]), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(texCoordLocation);
+      gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+    }
+
+    // creating texture
+    const targetTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16I, width, height, 0, gl.RED_INTEGER, gl.SHORT, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    const frameBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, 0);
+
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
+      alert("this combination of attachments does not work");
+    }
+
+    const uniforms = {
+      u_slope: this.props.slope,
+      u_intercept: this.props.intercept,
+      u_plane: this.oti(canvasPart.plane),
+      u_currentSlice: canvasPart.currentSlice,
+      u_maxSlice: this.slicesCountForPlane(canvasPart.plane),
+      u_image: 1,
+      u_inverted: canvasPart.isInverted
+    };
+
+    shader.assignUniforms(gl, uniforms);
+
+    //gl.clearColor(0, 0, 0, 1);
+    //this.updateRectangle(width, height)
+
+    const results = new Int16Array (width * height);
+
+    // gl.clearDepth(1.0);
+    //gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_3D, this.props.texture3d);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 6);
+    gl.readPixels(0, 0, width, height, gl.RED_INTEGER, gl.SHORT, results);
+    console.log(results)
+    console.log("fastMin(view2): " + fastMin(results))
+    console.log("fastMax(view2): " + fastMax(results))
+
+    return results;
+  }
+
+
+
   public render(canvasPart: CanvasPartComponent) {
+    // return
     const gl = this.context;
     const canvas = this.canvas.nativeElement.getBoundingClientRect();
     const slice = canvasPart.canvas.nativeElement.getBoundingClientRect();
@@ -313,15 +465,16 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
       u_slope: this.props.slope,
       u_intercept: this.props.intercept,
       u_currentSlice: canvasPart.currentSlice,
-      u_orientation: this.oti(canvasPart.orientation),
-      u_maxSlice: this.slicesCountForOrientation(canvasPart.orientation),
+      u_plane: this.oti(canvasPart.plane),
+      u_maxSlice: this.slicesCountForPlane(canvasPart.plane),
       u_image: 0,
-      u_lut: 1
+      u_lut: 1,
+      u_inverted: canvasPart.isInverted
     };
 
     shader.assignUniforms(gl, uniforms);
 
-    const dimensions = this.getDimensionsForOrientation(canvasPart.orientation);
+    const dimensions = this.getDimensionsForPlane(canvasPart.plane);
     this.updateRectangle(dimensions.width, dimensions.height);
 
     gl.activeTexture(gl.TEXTURE0);
@@ -339,10 +492,11 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     const ctx = canvasPart.canvas2d.nativeElement.getContext('2d')!;
     ctx.clearRect(0, 0, bbox.width, bbox.height)
     this.shapes
-      .filter(shape => shape.orientation === canvasPart.orientation)
+      .filter(shape => shape.plane === canvasPart.plane)
       .filter(shape => shape.slice === canvasPart.currentSlice)
       .filter(shape => shape.isVisible)
       .forEach(shape => this.renderMeasurement(shape, canvasPart))
+    canvasPart.writeInfoOntoCanvas2D();
   }
 
   public renderMeasurement(shape: Measurement, canvasPart: CanvasPartComponent) {
@@ -356,7 +510,6 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
     if (MeasurementType.DISTANCE === shape.type) {
       const vertices = this.getTransformedVertices(shape, canvasPart);
-
       const mm = getDistanceMM(spacing, shape.vertices[0], shape.vertices[1]).toFixed(2);
       ctx.fillTextVec(`${mm} mm`, vertices[0]);
       ctx.beginPath()
@@ -369,25 +522,18 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
     if (MeasurementType.RECTANGLE === shape.type) {
       const vertices = this.getTransformedVertices(shape, canvasPart);
-
       const mm = getAreaMM(spacing, shape.vertices[3], shape.vertices[1]).toFixed(2);
 
       ctx.fillTextVec(`Area: ${mm} mm`, vertices[0]);
-
       ctx.beginPath()
-
       ctx.moveToVec(vertices[0]);
       ctx.lineToVec(vertices[1]);
-
       ctx.moveToVec(vertices[1]);
       ctx.lineToVec(vertices[2]);
-
       ctx.moveToVec(vertices[2]);
       ctx.lineToVec(vertices[3]);
-
       ctx.moveToVec(vertices[3]);
       ctx.lineToVec(vertices[0]);
-
       ctx.stroke();
       ctx.closePath();
 
@@ -462,13 +608,18 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   };
 
   private setupContext(): void {
-    this.context = this.canvas.nativeElement.getContext('webgl2', {
+    const gl = this.canvas.nativeElement.getContext('webgl2', {
       desynchronized: true,
       preserveDrawingBuffer: true
     })!;
 
-    this.context.canvas.width = this.parent.nativeElement.clientWidth;
-    this.context.canvas.height = this.parent.nativeElement.clientHeight;
+    // TODO: OPIS
+    gl.getExtension('EXT_color_buffer_float');
+
+    gl.canvas.width = this.parent.nativeElement.clientWidth;
+    gl.canvas.height = this.parent.nativeElement.clientHeight;
+
+    this.context = gl;
   };
 
   private createCanvasPart() {
@@ -479,7 +630,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     component.instance.lut = this.lookupTables[0];
     component.instance.camera = new Camera();
     component.instance.currentSlice = 0;
-    component.instance.orientation = Orientation.BOTTOM;
+    component.instance.plane = Plane.TRANSVERSE;
     component.instance.windowing = this.getDefaultWindowing();
     component.instance.onChanges.subscribe(x => this.render(x));
     component.instance.onResize
@@ -513,16 +664,23 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     const $mainProgram = this.shaderService.createProgramFromAssets(this.context, vert, frag);
     const $shapeProgram = this.shaderService.createProgramFromAssets(
       this.context, 'shaders/shader_shape_vert.glsl', 'shaders/shader_shape_frag.glsl');
+    const $histogramProgram = this.shaderService.createProgramFromAssets(
+      this.context, 'shaders/shader_vert_signed_histogram.glsl', 'shaders/shader_frag_signed_histogram.glsl');
 
-    return forkJoin([$mainProgram, $shapeProgram])
-      .pipe(tap(([mainProgram, shapeProgram]) => {
+    return forkJoin([$mainProgram, $shapeProgram, $histogramProgram])
+      .pipe(tap(([mainProgram, shapeProgram, histogramProgram]) => {
+        this.programs['histogram'] = new Shader(histogramProgram[0], histogramProgram[1]);
         this.programs['default'] = new Shader(mainProgram[0], mainProgram[1]);
         this.programs['shape'] = new Shader(shapeProgram[0], shapeProgram[1]);
 
         this.texCoordLocation = gl.getAttribLocation(this.programs['default'].program, 'a_texCoord');
+        this.texCoordLocationH = gl.getAttribLocation(this.programs['histogram'].program, 'a_texCoord');
         this.positionLocation = gl.getAttribLocation(this.programs['default'].program, 'a_position');
+        this.positionLocationH = gl.getAttribLocation(this.programs['histogram'].program, 'a_position');
         gl.enableVertexAttribArray(this.texCoordLocation);
         gl.enableVertexAttribArray(this.positionLocation);
+        gl.enableVertexAttribArray(this.texCoordLocationH);
+        gl.enableVertexAttribArray(this.positionLocationH);
       })
     );
   };
@@ -556,27 +714,17 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
       this.context.canvas.height = this.parent.nativeElement.clientHeight;
       this.canvases.forEach(x => {
         if (x.instance.isRendered) {
+          const gl = this.context;
+          gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+          gl.clearColor(0, 0, 0, 1);
+          gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+
           x.instance.resetPosition();
-          this.render(x.instance);
+          setTimeout(() => this.render(x.instance))
         }
       })
     }
   };
-
-  grid(count: number) {
-    if (this.canvases.length < count) {
-      const diff = count - this.canvases.length;
-      for (let i = 1; i <= diff; ++i) {
-        this.canvases.push(this.createCanvasPart());
-      }
-    } else {
-      for (let i = this.canvases.length - 1; i >= count; --i) {
-        //todo unsubscribe
-        const last = this.canvases.pop();
-        last?.destroy();
-      }
-    }
-  }
 
   enabled = false;
   currentHover = -1;
@@ -607,4 +755,90 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     })
   }
 
+  switchSidebar(mode: SidebarMode) {
+    if (mode === this.sidebarMode) {
+      this.sidebarMode = SidebarMode.NONE;
+      return
+    }
+    this.sidebarMode = mode;
+  }
+
+  layouts: Layout[] = [
+    {
+      icon: 'layout_4',
+      regions: 1,
+      templateAreas: '"a"',
+      areaIdentifiers: ['a']
+    },
+    {
+      icon: 'layout_3',
+      regions: 3,
+      templateAreas: '"a b c"',
+      areaIdentifiers: ['a', 'b', 'c']
+    },
+    {
+      icon: 'layout_2',
+      regions: 3,
+      templateAreas: '"a b" "a c"',
+      areaIdentifiers: ['a', 'b', 'c']
+    },
+    {
+      icon: 'layout_1',
+      regions: 3,
+      templateAreas: '"a b" "c c"',
+      areaIdentifiers: ['a', 'b', 'c']
+    }
+  ]
+  currentLayout = this.layouts[0];
+
+  public changeLayout(layout: Layout) {
+    const planes = [Plane.TRANSVERSE, Plane.CORONAL, Plane.SAGITTAL]
+    this.currentLayout = layout;
+    if (this.canvases.length < layout.regions) {
+      const diff = layout.regions - this.canvases.length;
+      for (let i = 1; i <= diff; ++i) {
+        this.canvases.push(this.createCanvasPart());
+      }
+    } else {
+      for (let i = this.canvases.length - 1; i >= layout.regions; --i) {
+        //todo unsubscribe
+        const last = this.canvases.pop();
+        last?.destroy();
+      }
+    }
+
+    setTimeout(() => {
+      for (let i = 0; i < this.canvases.length; ++i) {
+        this.canvases[i].instance.plane = planes.pop()!;
+        this.canvases[i].location.nativeElement.childNodes[0].style.gridArea = layout.areaIdentifiers[i]
+      }
+    })
+
+  }
+
+  public gathserSettings(): any {
+    const cp = this.currentCanvas;
+    return {
+      slice: {
+        min: 1,
+        max: this.slicesCountForPlane(cp.plane),
+        current: cp.currentSlice
+      },
+      zoom: {
+        min: 20,
+        max: 1000,
+        current: Math.ceil(cp.camera.zoom * 100)
+      },
+      windowing: {
+        wc_min: 0,
+        wc_max: 1000,
+        ww_min: 0,
+        ww_max: 1000,
+        wc_current: cp.windowing.wc,
+        ww_current: cp.windowing.ww,
+        presets: []
+      },
+      luts: this.lookupTables
+    }
+  }
 }

@@ -1,0 +1,133 @@
+@import "../../../variables";
+
+.content {
+  margin-top: 15px;
+  display: flex;
+  flex-flow: column;
+}
+
+.search {
+  width: 100%;
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  span {
+    color: #ffffff;
+    margin-right: 15px;
+    margin-left: 15px;
+  }
+  input {
+    color: #fff;
+    padding: 3px;
+    flex-grow: 1;
+    outline: none;
+    margin-right: 15px;
+    background: #000000;
+    border-radius: 3px;
+    border: 1px solid $color4;
+  }
+}
+
+.table {
+  color: #c2c2c2;
+  display: grid;
+  font-family: Bahnschrift, serif;
+
+  &--row {
+    display: contents;
+    div {
+      background: $color1;
+    }
+  }
+
+  &--headers {
+    display: contents;
+    position: fixed;
+  }
+
+  &--header {
+    user-select: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+    text-align: center;
+    padding: 10px;
+    text-transform: uppercase;
+    font-weight: bold;
+    cursor: pointer;
+    border-right: 1px solid $color3;
+
+    &__sort {
+      margin-left: 3px;
+      width: 12px;
+      height: 12px;
+      svg {
+        width: 12px;
+        height: 12px;
+      }
+    }
+  }
+
+  &--data {
+    white-space: nowrap;
+    border-bottom: $color-dark-row-border-bottom;
+    padding: 5px;
+    text-align: left;
+    cursor: pointer;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  &--footer {
+    padding-top: 10px;
+    display: flex;
+    grid-column-start: 1;
+    width: 100%;
+
+    select {
+      outline: none;
+      border: none;
+      border-bottom: $color-dark-row-border-bottom;
+      padding: 5px;
+      cursor: pointer;
+
+    }
+    option {
+      cursor: pointer;
+    }
+
+    button {
+      margin: 0;
+      padding: 0;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      background-color: inherit;
+      transition: 0.3s;
+      width: 22px;
+      height: 22px;
+
+      &[disabled] {
+        cursor: not-allowed;
+      }
+
+      &:hover {
+        //background-color: $bg;
+      }
+
+      app-icon svg {
+        width: 22px;
+        height: 22px;
+        fill: $color-dark-text;
+      }
+    }
+  }
+}
+
+.nested {
+  display: contents;
+  .table--data {
+    //padding-left: 20px;
+  }
+}

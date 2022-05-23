@@ -28,7 +28,7 @@ export class RectangularArea extends Tool {
         description: "description",
         vertices: [real, real],
         slice: this.canvasPart.currentSlice,
-        orientation: this.canvasPart.orientation,
+        plane: this.canvasPart.plane,
         isSelected: false,
         isVisible: true,
         detailsToggled: false,

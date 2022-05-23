@@ -87,7 +87,7 @@ export class ApiService {
   public addArea(seriesId: string, measurement: Measurement) {
     return this.http.post<Measurement>(`https://localhost:5001/api/series/${seriesId}/area`, {
       label: measurement.label,
-      orientation: measurement.orientation,
+      plane: measurement.plane,
       slice: measurement.slice,
       vertices: measurement.vertices.map(x => [x[0] | 0, x[1] | 0])
     })

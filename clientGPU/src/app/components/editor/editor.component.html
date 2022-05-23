@@ -1,11 +1,6 @@
 <div class="flex">
   <div class="tools--list">
 
-    <span class="tools--list--entry" (click)="sidebarActive = !sidebarActive">
-      <app-icon class="tools--list--entry__icon" [icon]="sidebarActive ? 'double_left' : 'double_right'"></app-icon>
-      <span class="tools--list--entry__tooltip">{{ sidebarActive ? 'Hide' : 'Show' }}</span>
-    </span>
-
     <span class="tools--list--entry"
       [class.tools--list--entry--active]="tool === tol"
       (click)="changeTool(tol)"
@@ -16,17 +11,12 @@
     </span>
 
     <span class="tools--list--entry" (click)="enabled = !enabled">
-      <app-icon class="tools--list--entry__icon" icon="grid"></app-icon>
-      <span class="tools--list--entry__tooltip">Grid</span>
+      <app-icon class="tools--list--entry__icon" [icon]="currentLayout.icon"></app-icon>
+      <span class="tools--list--entry__tooltip">MPR</span>
       <span class="grid-selector" *ngIf="enabled">
-        <span
-          *ngFor="let z of [].constructor(3); let i = index"
-          [class.grid-selector-element-active]="currentHover >= i"
-          (mouseover)="hover(i)"
-          (mouseout)="hover(-1)"
-          (click)="grid(i + 1)"
-          class="grid-selector-element"
-        ></span>
+        <ng-container *ngFor="let layout of layouts">
+          <app-icon class="grid-selector-element" [icon]="layout.icon" (click)="changeLayout(layout)"></app-icon>
+        </ng-container>
       </span>
     </span>
 
@@ -39,13 +29,11 @@
       <app-icon class="tools--list--entry__icon" icon="reset"></app-icon>
       <span class="tools--list--entry__tooltip">Reset</span>
     </span>
+    <span class="tools--list--entry" (click)="readCurrentSlicePixels()">
+      <app-icon class="tools--list--entry__icon" icon="reset"></app-icon>
+      <span class="tools--list--entry__tooltip">read</span>
+    </span>
   </div>
-
-  <app-areas-sidebar
-    [editor]="this"
-    [isHidden]="sidebarActive"
-    [shapes]="shapes">
-  </app-areas-sidebar>
 
   <div #parent class="editor--wrapper">
     <div class="loading--wrapper" *ngIf="download?.state !== 'DONE'">
@@ -60,10 +48,71 @@
       </div>
     </div>
 
-    <canvas #canvas class="editor"> </canvas>
-    <div class="editor-grid" [style.grid-template-columns]="'1fr '.repeat(canvases.length)">
+
+    <!--<div class="editor-grid" [style.grid-template-columns]="'1fr '.repeat(canvases.length)">-->
+    <div class="editor-grid"
+         [style.grid-template-areas]="currentLayout.templateAreas">
+      <canvas #canvas class="editor"> </canvas>
       <ng-container #container></ng-container>
     </div>
   </div>
 
+
+
+  <div class="sidebar" *ngIf="sidebarMode !== SidebarMode.NONE">
+    <ng-container [ngSwitch]="sidebarMode">
+      <app-areas-sidebar
+        *ngSwitchCase="SidebarMode.MEASUREMENTS"
+        [editor]="this"
+        [isHidden]="sidebarActive"
+        [shapes]="shapes">
+      </app-areas-sidebar>
+      <app-nestable-table
+        *ngSwitchCase="SidebarMode.TAGS"
+        [data]="tagsTable">
+      </app-nestable-table>
+
+      <div *ngSwitchCase="SidebarMode.SETTINGS" style="display: flex; flex-flow: column">
+        <app-settings
+          [settings]="gathserSettings()"
+        >
+        </app-settings>
+      </div>
+      <div *ngSwitchCase="SidebarMode.HISTOGRAM" style="display: flex; flex-flow: column">
+        <app-histogram [data]="buckets"></app-histogram>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="bar">
+    <div class="bar--options">
+      <span
+        [class.bar--option__active]="sidebarMode === SidebarMode.SETTINGS"
+        class="bar--option" (click)="switchSidebar(SidebarMode.SETTINGS)">
+        <app-icon class="bar--option__icon" icon="settings"></app-icon>
+        <span>Settings</span>
+      </span>
+      <span
+        [class.bar--option__active]="sidebarMode === SidebarMode.TAGS"
+        class="bar--option" (click)="switchSidebar(SidebarMode.TAGS)">
+        <app-icon class="bar--option__icon" icon="tags"></app-icon>
+        <span>Tags</span>
+      </span>
+      <span
+        [class.bar--option__active]="sidebarMode === SidebarMode.MEASUREMENTS"
+        class="bar--option" (click)="switchSidebar(SidebarMode.MEASUREMENTS)">
+        <app-icon class="bar--option__icon" icon="ruler"></app-icon>
+        Measurements
+      </span>
+      <span
+        [class.bar--option__active]="sidebarMode === SidebarMode.HISTOGRAM"
+        class="bar--option" (click)="switchSidebar(SidebarMode.HISTOGRAM)">
+        <app-icon class="bar--option__icon" icon="chart"></app-icon>
+        Histogram
+      </span>
+    </div>
+  </div>
+
 </div>
+
+

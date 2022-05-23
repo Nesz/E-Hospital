@@ -11,9 +11,13 @@ export class Shader {
   }
 
   assignUniforms = (gl: WebGL2RenderingContext, data: any) => {
+    console.log(this.uniforms)
     for (const key of Object.keys(this.uniforms)) {
       const { type, location } = this.uniforms[key];
       switch (type) {
+        case 'BOOL':
+          gl.uniform1i(location, data[key]);
+          break
         case 'INT':
         case 'SAMPLER_2D':
         case 'INT_SAMPLER_3D':

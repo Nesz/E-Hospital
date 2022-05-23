@@ -18,15 +18,6 @@ export class AreasSidebarComponent implements OnInit {
   @Output() onEvent = new EventEmitter<string>();
   readonly DicomTag: typeof Tag = Tag;
 
-  readonly infoToDisplay: [string, () => string][] = [
-    [ "Description: ", (() => this.getTagValue(Tag.SERIES_DESCRIPTION)) ],
-    [ "Date: ", (() => this.getTagValue(Tag.SERIES_DATE)) ],
-    [ "Modality: ", (() => this.getTagValue(Tag.MODALITY)) ],
-    [ "Patient Name: ", (() => this.getTagValue(Tag.PATIENT_NAME)) ],
-    [ "Patient Gender: ", (() => this.getTagValue(Tag.PATIENT_SEX)) ],
-    [ "Slices: ", (() => `${this.editor?.props?.sliceCount}`) ]
-  ]
-
   constructor(private readonly apiService: ApiService) { }
 
   ngOnInit(): void {
@@ -39,10 +30,10 @@ export class AreasSidebarComponent implements OnInit {
 
   goToArea(shape: Measurement) {
     const canvas = this.editor.canvases
-      .find(c => c.instance.orientation === shape.orientation) ?? this.editor.canvases[0];
+      .find(c => c.instance.plane === shape.plane) ?? this.editor.canvases[0];
 
     canvas.instance.currentSlice = shape.slice;
-    canvas.instance.orientation = shape.orientation;
+    canvas.instance.plane = shape.plane;
     this.editor.render(canvas.instance);
   }
 
@@ -54,7 +45,7 @@ export class AreasSidebarComponent implements OnInit {
         const canvas = this.editor.canvases
           .map(c => c.instance)
           .find(c =>
-            c.orientation === shape.orientation &&
+            c.plane === shape.plane &&
             c.currentSlice === shape.slice
           );
         if (canvas) {
@@ -69,7 +60,7 @@ export class AreasSidebarComponent implements OnInit {
     const canvas = this.editor.canvases
       .map(c => c.instance)
       .find(c =>
-        c.orientation === shape.orientation &&
+        c.plane === shape.plane &&
         c.currentSlice === shape.slice
       );
     if (canvas) {
@@ -82,7 +73,5 @@ export class AreasSidebarComponent implements OnInit {
     this.apiService.updateAreaLabel(this.editor.seriesId, shape).subscribe();
   }
 
-  getTagValue(tag: any) {
-    return this.editor.dicom?.getValue(tag, false)?.asString();
-  }
+
 }

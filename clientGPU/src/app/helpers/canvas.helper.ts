@@ -1,5 +1,6 @@
 import { RawLutData, Measurement } from "../model/interfaces";
 import { vec2 } from "gl-matrix";
+import { retry } from "rxjs/operators";
 
 export const loadLUT = (
   gl: WebGL2RenderingContext,
@@ -46,7 +47,12 @@ export const generate3DTexture = (args: {
   width: number;
   height: number;
   depth: number;
-}) => {
+}): [WebGLTexture, {
+  min: number,
+  max: number,
+  bucketSize: number,
+  buckets: number[]
+}] => {
   const gl = args.gl;
 
   const [format, internalFormat, dataType, viewType] = getEnumsFor(
@@ -55,7 +61,55 @@ export const generate3DTexture = (args: {
   );
 
   const view = getView(args.buffer, viewType);
+
+  const buckets = 64;
+  const view2 = new Int16Array(args.buffer, 0, 512 * 512);
+  const plot = {
+    min: 0,
+    max: 0,
+    bucketSize: 0,
+    buckets: new Array(buckets).fill(0)
+  };
+  console.log(view2)
+  const intercept = -1024;
+  const minIntensity = fastMin(view2) + intercept;
+  const maxIntensity = fastMax(view2) + intercept;
+  const binSize  = (maxIntensity - minIntensity) / buckets;
+  console.log("minIntensity: " + minIntensity)
+  console.log("maxIntensity: " + maxIntensity)
+  console.log("fastMin(view2): " + fastMin(view2))
+  console.log("fastMax(view2): " + fastMax(view2))
+  console.log(binSize)
+
+  for (let i = 0; i < view2.length; ++i) {
+    const intensity = view2[i] + intercept;
+    const index = Math.floor((intensity - minIntensity) / binSize);
+    plot.buckets[index]++;
+  }
+  plot.min = minIntensity;
+  plot.max = maxIntensity;
+  plot.bucketSize = binSize;
+
+  console.log(plot)
+  // console.log("plot")
+  // for (let i = 0; i < plot.length; ++i) {
+  //   console.log(i + " " + plot[i])
+  // }
+
+
+
+
+
+
   const texture = gl.createTexture();
+
+
+
+
+
+  // console.log(view)
+  // console.log(fastMin(view))
+  // console.log(fastMax(view))
 
   gl.bindTexture(gl.TEXTURE_3D, texture);
 
@@ -80,7 +134,7 @@ export const generate3DTexture = (args: {
     view
   );
 
-  return texture;
+  return [texture!, plot];
 }
 
 export const getView = (buffer: ArrayBuffer, type: string) => {
@@ -100,9 +154,9 @@ export const getEnumsFor = (
   if (bitsPerPixel == 16) {
     if (pixelRepresentation == 1)
       return [
-        WebGL2RenderingContext.R16I,
-        WebGL2RenderingContext.RED_INTEGER,
-        WebGL2RenderingContext.SHORT,
+        WebGL2RenderingContext.R16F,
+        WebGL2RenderingContext.RED,
+        WebGL2RenderingContext.FLOAT,
         'int16',
       ];
     if (pixelRepresentation == 0)
@@ -212,3 +266,211 @@ export const getAreaMM = (spacing: number[], p1: vec2, p2: vec2) => {
   const y = Math.abs((p1[1] - p2[1]) * (spacing?.[1] || 1));
   return x * y;
 }
+
+
+export const degreesToRadians = (degrees: number) => {
+  return degrees * Math.PI / 180;
+}
+export const radiansToDegrees = (radians: number) =>{
+  return radians * (180 / Math.PI);
+}
+
+function getTheoreticalMin(name: string) {
+  switch (name) {
+    case 'Int16Array': return -32768;
+    case 'Uint16Array': return 0;
+    case 'Int8Array': return -128;
+    case 'Uint8Array': return 0;
+    default: return -1;
+  }
+}
+
+export function fastMin(
+  numbers: any,
+  { debug = false, no_data = undefined, theoretical_min = undefined } = {
+    debug: false,
+    no_data: undefined,
+    theoretical_min: undefined,
+  }
+) {
+  if (debug)
+    console.log("[fast-min] starting with numbers:", numbers.slice(0, 10));
+
+  if (!numbers.length) {
+    if (debug)
+      console.error(
+        "[fast-min] Instead of an array of numbers, you passed in",
+        numbers
+      );
+    throw new Error("[fast-min] You didn't pass in an array of numbers");
+  }
+  if (numbers.length === 0)
+    throw new Error("[fast-min] You passed in an empty array");
+
+  let min;
+  const length = numbers.length;
+
+  if (debug) console.log("[fast-min] constructor:", numbers.constructor.name);
+
+  if (theoretical_min === undefined)
+    { // @ts-ignore
+      theoretical_min = getTheoreticalMin(numbers.constructor.name);
+    }
+  if (debug) console.log("[fast-min] theoretical minimunm is", theoretical_min);
+  if (theoretical_min) {
+    if (no_data !== undefined) {
+      min = Infinity;
+      for (let i = 0; i < length; i++) {
+        const value = numbers[i];
+        if (value < min && value !== no_data) {
+          min = value;
+          if (value === theoretical_min) {
+            if (debug)
+              console.log(
+                "[fast-min] found minimum value of " +
+                value +
+                " at index " +
+                i +
+                " of " +
+                length
+              );
+            break;
+          }
+        }
+      }
+      if (min === Infinity) min = undefined;
+    } else {
+      min = numbers[0];
+      for (let i = 1; i < length; i++) {
+        const value = numbers[i];
+        if (value < min) {
+          min = value;
+          if (value === theoretical_min) {
+            if (debug)
+              console.log(
+                "[fast-min] found minimum value of " +
+                value +
+                " at index " +
+                i +
+                " of " +
+                length
+              );
+            break;
+          }
+        }
+      }
+    }
+  } else {
+    if (no_data !== undefined) {
+      min = Infinity;
+      for (let i = 1; i < length; i++) {
+        const value = numbers[i];
+        if (value < min && value !== no_data) {
+          min = value;
+        }
+      }
+      if (min === Infinity) min = undefined;
+    } else {
+      min = numbers[0];
+      for (let i = 1; i < length; i++) {
+        const value = numbers[i];
+        if (value < min) {
+          min = value;
+        }
+      }
+    }
+  }
+
+  if (debug) console.log("[fast-min] returning", min);
+  return min;
+};
+
+function getTheoreticalMax(name: string) {
+  switch (name) {
+    case 'Int16Array': return 32767;
+    case 'Uint16Array': return 65535;
+    case 'Int8Array': return 127;
+    case 'Uint8Array': return 255;
+    default: return -1;
+  }
+}
+
+export function fastMax(
+  numbers: any,
+  { debug = false, no_data = undefined, theoretical_max = undefined } = {
+    debug: false,
+    no_data: undefined,
+    theoretical_max: undefined,
+  }
+) {
+  if (debug) console.log("[fast-max] starting with numbers:", numbers.slice(0, 10));
+
+  if (!numbers.length) {
+    if (debug) console.error("[fast-max] Instead of an array of numbers, you passed in", numbers);
+    throw new Error("[fast-max] You didn't pass in an array of numbers");
+  }
+  if (numbers.length === 0) throw new Error("[fast-max] You passed in an empty array");
+
+  let max;
+  const length = numbers.length;
+
+  if (debug) console.log("[fast-max] constructor:", numbers.constructor.name);
+
+  if (theoretical_max === undefined) { // @ts-ignore
+    theoretical_max = getTheoreticalMax(numbers.constructor.name);
+  }
+
+  if (debug) console.log("[fast-max] theoretical maximunm is", theoretical_max);
+  if (theoretical_max) {
+    if (no_data !== undefined) {
+      max = -Infinity;
+      for (let i = 1; i < length; i++) {
+        const value = numbers[i];
+        if (value > max && value !== no_data) {
+          max = value;
+          // @ts-ignore
+          if (value >= theoretical_max) {
+            if (debug) console.log("[fast-max] found maximum value of " + value + " at index " + i + " of " + length);
+            break;
+          }
+        }
+      }
+      if (max === -Infinity) max = undefined;
+    } else {
+      max = numbers[0];
+      for (let i = 1; i < length; i++) {
+        const value = numbers[i];
+        if (value > max) {
+          max = value;
+          // @ts-ignore
+          if (value >= theoretical_max) {
+            if (debug) console.log("[fast-max] found maximum value of " + value + " at index " + i + " of " + length);
+            break;
+          }
+        }
+      }
+    }
+  } else {
+    if (no_data !== undefined) {
+      max = -Infinity;
+      for (let i = 0; i < length; i++) {
+        const value = numbers[i];
+        if (value > max && value !== no_data) {
+          max = value;
+        }
+      }
+      if (max === -Infinity) max = undefined;
+    } else {
+      max = numbers[0];
+      for (let i = 1; i < length; i++) {
+        const value = numbers[i];
+        if (value > max) {
+          max = value;
+        }
+      }
+    }
+  }
+
+  if (debug) console.log("[fast-max] returning", max);
+  return max;
+};

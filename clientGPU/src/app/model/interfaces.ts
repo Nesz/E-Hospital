@@ -22,7 +22,7 @@ export interface Measurement {
   label: string;
   description: string;
   slice: number;
-  orientation: Orientation;
+  plane: Plane;
   vertices: vec2[];
   isVisible: boolean;
   isSelected: boolean;
@@ -39,6 +39,14 @@ export interface User {
   birthDate: string,
   role: Role,
   gender: Gender
+}
+
+export enum SidebarMode {
+  NONE,
+  TAGS,
+  MEASUREMENTS,
+  HISTOGRAM,
+  SETTINGS
 }
 
 export enum OrderDirection {
@@ -66,13 +74,10 @@ export interface Page<T> {
   data: T[]
 }
 
-export enum Orientation {
-  TOP = 0,
-  LEFT = 1,
-  RIGHT = 2,
-  BOTTOM = 3,
-  FRONT = 4,
-  BACK = 5
+export enum Plane {
+  TRANSVERSE = 0, // up-down
+  SAGITTAL = 1, // left-right
+  CORONAL = 2, // front-back
 }
 
 export type LookupTablesData = RawLutData[]
@@ -125,4 +130,11 @@ export enum MeasurementType {
   DISTANCE,
   ANGLE,
   RECTANGLE,
+}
+
+export interface Layout {
+  icon: string,
+  regions: number,
+  templateAreas: string,
+  areaIdentifiers: string[]
 }

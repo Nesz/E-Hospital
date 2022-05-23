@@ -1,0 +1,107 @@
+<div class="settings-section">
+  <div class="settings-section--content">
+    <div class="settings-section--setting setting--checkbox">
+      <span class="settings-section--header">Synchronization:</span>
+      <span>Synchronize MPR view:</span>
+      <input [value]="isSynchronized" (input)="isSynchronized = !isSynchronized" type="checkbox">
+    </div>
+  </div>
+</div>
+
+<div class="settings-section">
+
+  <span class="settings-section--header">Windowing and LUT's</span>
+  <div class="settings-section--content">
+
+    <app-input-range
+      [min]="0"
+      [max]="1000"
+      [value]="scene.windowing.ww"
+      (onChanged)="changeWW($event)"
+      label="Window:"
+    ></app-input-range>
+
+    <app-input-range
+      [min]="0"
+      [max]="1000"
+      [value]="scene.windowing.wc"
+      (onChanged)="changeWC($event)"
+      label="Level:"
+    ></app-input-range>
+
+    <div class="settings-section--setting setting--dropdown">
+      <span>Presets:</span>
+      <select>
+        <option>Custom</option>
+      </select>
+    </div>
+
+    <div class="settings-section--setting setting--dropdown">
+      <span>LUT:</span>
+      <app-icon class="icon" icon="contrast" (click)="toggleInversion()"></app-icon>
+      <select [value]="scene.lut.name" (change)="changeLut($event)">
+        <option *ngFor="let lut of settings.luts" [value]="lut.name">{{lut.name}}</option>
+      </select>
+    </div>
+
+    <div class="settings-section--setting setting--dropdown">
+      <span>LUT Shape:</span>
+      <select>
+        <option>Linear</option>
+      </select>
+    </div>
+
+  </div>
+</div>
+
+<div class="settings-section">
+
+  <span class="settings-section--header">Transform</span>
+  <div class="settings-section--content">
+
+    <app-input-range
+      [min]="20"
+      [max]="1000"
+      [value]="getZoom(scene.camera.zoom)"
+      (onChanged)="changeZoom($event)"
+      label="Zoom:"
+      unit="%"
+    ></app-input-range>
+
+    <app-input-range
+      [min]="0"
+      [max]="360"
+      [value]="radiansToDegrees(scene.camera.rotation)"
+      (onChanged)="changeRotation($event)"
+      label="Rotation:"
+      unit="°"
+    ></app-input-range>
+
+  </div>
+</div>
+
+<div class="settings-section">
+  <span class="settings-section--header">Cine</span>
+  <div class="settings-section--content">
+
+    <app-input-range
+      [min]="1"
+      [max]="editor.slicesCountForPlane(scene.plane)"
+      [value]="scene.currentSlice"
+      (onChanged)="scene.currentSlice = $event; editor.render(scene)"
+      label="Slice:"
+    ></app-input-range>
+
+    <app-input-range
+      [min]="1"
+      [max]="120"
+      [value]="30"
+      label="Speed (fps):"
+    ></app-input-range>
+
+    <div class="flex flex--centered__both">
+      <app-icon class="cine--icon" icon="play"></app-icon>
+    </div>
+
+  </div>
+</div>

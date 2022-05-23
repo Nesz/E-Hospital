@@ -1,56 +1,4 @@
 <div class="canvas-part">
-  <div class="canvas-part--header__wrapper">
-    <div class="canvas-part--header">
-      <div class="setting">
-        <span>LUT</span>
-        <select
-          class="canvas-part--header__axis"
-          [value]="lut.name"
-          (change)="changeLut($event)"
-        >
-          <option [value]="lut.name" *ngFor="let lut of editor.lookupTables">{{ lut.name }}</option>
-        </select>
-      </div>
-      <div class="setting">
-        <span>View</span>
-        <select
-          class="canvas-part--header__axis"
-          [value]="orientation"
-          (change)="changeAxis($event)"
-        >
-          <option value="top">Top</option>
-          <option value="left">Left</option>
-          <option value="right">Right</option>
-          <option selected value="bottom">Bottom</option>
-          <option value="front">Front</option>
-          <option value="back">Back</option>
-        </select>
-      </div>
-      <div class="setting">
-        <span>WC</span>
-        <input type="number" [value]="windowing.wc" (input)="windowingChanged('wc', $event)">
-      </div>
-      <div class="setting">
-        <span>WW</span>
-        <input type="number" [value]="windowing.ww" (input)="windowingChanged('ww', $event)">
-      </div>
-      <div class="player">
-        <app-icon
-          class="player--icon"
-          (click)="togglePlayer()"
-          [icon]="timer.isPlaying ? 'pause' : 'play'"></app-icon>
-        <input
-          type="range"
-          name="frame"
-          min="1"
-          max="100"
-          [value]="fps"
-          (input)="fpsChanged($event)"
-        />
-        <span class="player--fps">{{ fps }} fps</span>
-      </div>
-    </div>
-  </div>
   <div #canvas id="draw-area" class="canvas-part__draw-area">
     <canvas #canvas2d class="wrapper2d"></canvas>
   </div>
@@ -60,15 +8,10 @@
         type="range"
         name="frame"
         min="0"
-        max="{{ editor.slicesCountForOrientation(orientation) }}"
+        max="{{ editor.slicesCountForPlane(plane) }}"
         [value]="currentSlice"
         (input)="changeSlice($event)"
       />
     </div>
-  </div>
-  <div class="debug">
-    <div class="debug__text">Slice: {{ currentSlice }}</div>
-    <div class="debug__text">Zoom: {{ camera.zoom.toFixed(2) }} </div>
-    <div class="debug__text">Size: {{ getTextureDimensions().width }}x{{ getTextureDimensions().height }}</div>
   </div>
 </div>

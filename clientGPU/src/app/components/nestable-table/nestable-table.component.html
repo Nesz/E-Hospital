@@ -1,0 +1,47 @@
+<div style="width: 100%" class="content flex--column flex--centered__both">
+  <div class="search">
+    <span>Search: </span>
+    <input placeholder="Search for keyword">
+  </div>
+
+  <div class="table" [style.grid-template-columns] = "'min-content min-content minmax(50px, 100px) 1fr'">
+
+    <div class="table--headers">
+      <div class="table--header" *ngFor="let header of data?.headers">
+        <span class="table--header__text">{{ header }}</span>
+      </div>
+    </div>
+
+    <div class="table--row" *ngFor="let row of data?.rows">
+      <ng-container
+        [ngTemplateOutlet]="rows"
+        [ngTemplateOutletContext]="{row:row}"></ng-container>
+    </div>
+
+  </div>
+</div>
+
+<ng-template #rows let-row='row'>
+  <ng-container *ngIf="!row.isNested; else nested">
+    <div class="table--data"  *ngFor="let data of row?.data" >
+      {{ data }}
+    </div>
+  </ng-container>
+  <ng-template #nested>
+    <div class="table--data" *ngFor="let data of row?.selfData" >
+      {{ data }}
+    </div>
+
+    <div class="table--data nested">
+      <div class="table--row">
+        <ng-container *ngFor="let data of row?.data; let i = index">
+          <ng-template
+            [ngTemplateOutlet]="rows"
+            [ngTemplateOutletContext]="{row:data}">
+          </ng-template>
+        </ng-container>
+      </div>
+    </div>
+
+  </ng-template>
+</ng-template>

@@ -12,7 +12,8 @@ import {
 import { EditorComponent } from "../editor/editor.component";
 import { FpsLoop } from "../../helpers/fps-loop";
 import { Camera } from "../../model/camera";
-import { LookupTable, Orientation, Windowing } from "../../model/interfaces";
+import { LookupTable, Plane, Windowing } from "../../model/interfaces";
+import { Tag } from "../../tag";
 
 @Component({
   selector: 'app-canvas-part',
@@ -26,13 +27,16 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
   @Output() onChanges = new EventEmitter<CanvasPartComponent>();
   @Output() onResize = new EventEmitter<CanvasPartComponent>();
 
+  readonly planes = Plane;
+
   editor!: EditorComponent;
   lut!: LookupTable;
   camera!: Camera;
   currentSlice!: number;
-  orientation!: Orientation;
+  plane!: Plane;
   windowing!: Windowing;
   context2D!: CanvasRenderingContext2D;
+  isInverted: boolean = false;
 
   isRendered = false;
   fps = 30;
@@ -63,9 +67,38 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
     })!;
 
   }
+  getTagValue(tag: any) {
+    return this.editor.dicom?.getValue(tag, false)?.asString();
+  }
+  public writeInfoOntoCanvas2D() {
+    console.log(this.editor.props.pixelSpacing)
+    const spacing = [
+      this.editor.props.pixelSpacing[0].toFixed(2),
+      this.editor.props.pixelSpacing[1].toFixed(2),
+    ]
+    const planeName = Plane[this.plane].toString();
+    const dimensions = this.getTextureDimensions();
+    const modality = this.getTagValue(Tag.MODALITY);
+    const curSlice = this.currentSlice + 1;
+    const maxSlice = this.editor.slicesCountForPlane(this.plane);
+    const ctx = this.context2D;
+    const bottom = ctx.canvas.height;
+    ctx.font = 'bold 15px Arial';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`Frame: ${curSlice} / ${maxSlice}`, 10, bottom - 100);
+    ctx.fillText(`Zoom: ${this.camera.zoom.toFixed(2)}x`, 10, bottom - 80);
+    ctx.fillText(`Window/Level: ${this.windowing.ww} / ${this.windowing.wc}`, 10, bottom - 60);
+    ctx.fillText(`Spacing x/y: ${spacing[0]}/${spacing[1]}`, 10, bottom - 40);
+    ctx.fillText(`${modality} (${dimensions.width}x${dimensions.height}) - ${planeName}`, 10, bottom - 20)
+
+    ctx.fillText(`Series: ${this.getTagValue(Tag.SERIES_DESCRIPTION)}`, 10, 20);
+    ctx.fillText(`Date: ${this.getTagValue(Tag.SERIES_DATE)}`, 10, 40);
+    ctx.fillText(`Patient: ${this.getTagValue(Tag.PATIENT_NAME)}`, 10, 60);
+    ctx.fillText(`Patient Sex: ${this.getTagValue(Tag.PATIENT_SEX)}`, 10, 80);
+  }
 
   public getTextureDimensions() {
-    return this.editor.getDimensionsForOrientation(this.orientation);
+    return this.editor.getDimensionsForPlane(this.plane);
   }
 
   public resetPosition() {
@@ -111,7 +144,7 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
   };
 
   public nextSlice() {
-    if (this.currentSlice === this.editor.slicesCountForOrientation(this.orientation)) {
+    if (this.currentSlice === this.editor.slicesCountForPlane(this.plane)) {
       this.currentSlice = 0;
     }
     this.currentSlice++;
@@ -119,7 +152,7 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
   }
 
   public changeAxis($event: Event) {
-    this.orientation = this.orientationEnumFromString(($event.target as HTMLInputElement).value);
+    this.plane = Number(($event.target as HTMLInputElement).value);
     this.currentSlice = 0;
     this.resetPosition();
     this.onChanges.emit(this);
@@ -150,22 +183,6 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
       this.timer.stop();
     } else {
       this.timer.start();
-    }
-  }
-
-  getOrientationName() {
-    return Orientation[this.orientation];
-  }
-
-  private orientationEnumFromString(orientation: string) {
-    switch (orientation) {
-      case 'top': return Orientation.TOP;
-      case 'left': return Orientation.LEFT;
-      case 'right': return Orientation.RIGHT;
-      case 'bottom': return Orientation.BOTTOM;
-      case 'front': return Orientation.FRONT;
-      case 'back': return Orientation.BACK;
-      default: throw 'bad orientation';
     }
   }
 
