@@ -34,7 +34,7 @@ const initializeTags = (icons: IconRegistryService): (() => Promise<void>) => {
     icons
       .loadDefinitions()
       .toPromise()
-      .then((result) => console.log(result))
+      .then((result) => console.log())
       .catch((error) => console.log(error))
 };
 

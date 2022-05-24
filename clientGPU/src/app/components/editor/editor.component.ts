@@ -17,7 +17,7 @@ import {
   generate3DTexture,
   getAngle,
   getAreaMM,
-  getDistanceMM,
+  getDistanceMM, getMinMax,
   isInsideBoundsBBox,
   loadLUT
 } from "../../helpers/canvas.helper";
@@ -205,7 +205,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
       console.log(dicom)
       console.log(dicom.asNumber(Tag.PIXEL_SPACING))
 
-      const [texture, buckets] = generate3DTexture({
+      const texture = generate3DTexture({
         gl: this.context,
         buffer: buffer,
         width: width,
@@ -216,8 +216,6 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         pixelRepresentation: pixelRepresentation,
       })
 
-      this.buckets = buckets;
-
       this.props = {
         sliceCount: series.instances.length,
         width: width,
@@ -225,7 +223,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         sliceThickness: sliceThickness,
         slope: slope,
         intercept: intercept,
-        pixelSpacing: dicom.asList<number>(Tag.PIXEL_SPACING).map(x => Number(x)),
+        pixelSpacing: dicom.hasTag(Tag.PIXEL_SPACING) ? dicom?.asList<number>(Tag.PIXEL_SPACING)?.map(x => Number(x)) : [1, 1],
         texture3d: texture
       }
 
@@ -344,6 +342,26 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     }
   }
 
+  public plotBuckets() {
+    const buckets = 512;
+    const pixels = this.readCurrentSlicePixels();
+    const { min, max } = getMinMax(pixels);
+    const bucketSize  = (max - min) / buckets;
+    const bucketsList = new Array(buckets).fill(0)
+
+    for (let i = 0; i < pixels.length; ++i) {
+      const pixel = pixels[i];
+      const index = Math.floor((pixel - min) / bucketSize);
+      bucketsList[index]++;
+    }
+
+    return {
+      min: min,
+      max: max,
+      bucketSize: bucketSize,
+      buckets: bucketsList
+    };
+  }
 
   public readCurrentSlicePixels() {
     const gl = this.context;
@@ -357,16 +375,13 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     gl.useProgram(shader.program);
 
     {
-      const positionLocation = gl.getAttribLocation(shader.program, 'a_position');
       const positionBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
         -1, -1, -1, 1, 1, -1,
         1, 1, 1, -1, -1, 1,
       ]), gl.STATIC_DRAW);
-      gl.enableVertexAttribArray(positionLocation);
-      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-      const texCoordLocation = gl.getAttribLocation(shader.program, "a_texCoord");
+      gl.vertexAttribPointer(this.positionLocationH, 2, gl.FLOAT, false, 0, 0);
       const texCoordBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
@@ -376,19 +391,18 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         1.0, 0.0,
         1.0, 1.0,
         0.0, 0.0]), gl.STATIC_DRAW);
-      gl.enableVertexAttribArray(texCoordLocation);
-      gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribPointer(this.texCoordLocationH, 2, gl.FLOAT, false, 0, 0);
     }
 
     // creating texture
     const targetTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, targetTexture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16I, width, height, 0, gl.RED_INTEGER, gl.SHORT, null);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R32F, width, height, 0, gl.RED, gl.FLOAT, null);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
+    // gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     const frameBuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, 0);
@@ -412,7 +426,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     //gl.clearColor(0, 0, 0, 1);
     //this.updateRectangle(width, height)
 
-    const results = new Int16Array (width * height);
+    const results = new Float32Array (width * height);
 
     // gl.clearDepth(1.0);
     //gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -421,11 +435,9 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_3D, this.props.texture3d);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 6);
-    gl.readPixels(0, 0, width, height, gl.RED_INTEGER, gl.SHORT, results);
-    console.log(results)
-    console.log("fastMin(view2): " + fastMin(results))
-    console.log("fastMax(view2): " + fastMax(results))
+    gl.readPixels(0, 0, width, height, gl.RED, gl.FLOAT, results);
 
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     return results;
   }
 
@@ -483,8 +495,8 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     gl.bindTexture(gl.TEXTURE_2D, canvasPart.lut.texture);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-    gl.useProgram(this.programs['shape'].program);
     this.renderMeasurements(canvasPart);
+    this.buckets = this.plotBuckets();
   };
 
   renderMeasurements(canvasPart: CanvasPartComponent) {
@@ -613,7 +625,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
       preserveDrawingBuffer: true
     })!;
 
-    // TODO: OPIS
+    // Ta wtyczka pozwala na używanie Float32Buffer jako tekstury
     gl.getExtension('EXT_color_buffer_float');
 
     gl.canvas.width = this.parent.nativeElement.clientWidth;
@@ -657,25 +669,20 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
   private initShaders(): Observable<any> {
     const gl = this.context;
-    const bpp = this.dicom.asNumber(Tag.BITS_PER_PIXEL);
-    const pixels = this.dicom.asNumber(Tag.PIXEL_REPRESENTATION);
-    const [frag, vert] = this.shaderService.matchShadersFor(pixels, bpp);
 
-    const $mainProgram = this.shaderService.createProgramFromAssets(this.context, vert, frag);
-    const $shapeProgram = this.shaderService.createProgramFromAssets(
-      this.context, 'shaders/shader_shape_vert.glsl', 'shaders/shader_shape_frag.glsl');
-    const $histogramProgram = this.shaderService.createProgramFromAssets(
-      this.context, 'shaders/shader_vert_signed_histogram.glsl', 'shaders/shader_frag_signed_histogram.glsl');
+    const $mainProgram = this.shaderService.createProgramFromAssets(this.context,
+      'shaders/shader_ct_vert.glsl', 'shaders/shader_ct_frag.glsl');
+    const $histogramProgram = this.shaderService.createProgramFromAssets(this.context,
+      'shaders/shader_vert_signed_histogram.glsl', 'shaders/shader_frag_signed_histogram.glsl');
 
-    return forkJoin([$mainProgram, $shapeProgram, $histogramProgram])
-      .pipe(tap(([mainProgram, shapeProgram, histogramProgram]) => {
+    return forkJoin([$mainProgram, $histogramProgram])
+      .pipe(tap(([mainProgram, histogramProgram]) => {
         this.programs['histogram'] = new Shader(histogramProgram[0], histogramProgram[1]);
         this.programs['default'] = new Shader(mainProgram[0], mainProgram[1]);
-        this.programs['shape'] = new Shader(shapeProgram[0], shapeProgram[1]);
 
         this.texCoordLocation = gl.getAttribLocation(this.programs['default'].program, 'a_texCoord');
-        this.texCoordLocationH = gl.getAttribLocation(this.programs['histogram'].program, 'a_texCoord');
         this.positionLocation = gl.getAttribLocation(this.programs['default'].program, 'a_position');
+        this.texCoordLocationH = gl.getAttribLocation(this.programs['histogram'].program, 'a_texCoord');
         this.positionLocationH = gl.getAttribLocation(this.programs['histogram'].program, 'a_position');
         gl.enableVertexAttribArray(this.texCoordLocation);
         gl.enableVertexAttribArray(this.positionLocation);

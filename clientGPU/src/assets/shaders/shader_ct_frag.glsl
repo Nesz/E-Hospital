@@ -1,13 +1,13 @@
 #version 300 es
 
 precision highp float;
-precision highp isampler3D;
+precision highp sampler3D;
 precision highp sampler2D;
 
 in vec2 v_texCoord;
 out vec4 fragColor;
 
-uniform isampler3D u_image;
+uniform sampler3D u_image;
 uniform sampler2D u_lut;
 uniform float u_ww;
 uniform float u_wc;
@@ -29,7 +29,7 @@ void main() {
     case 2: coords = vec3(v_texCoord.x, u_currentSlice/u_maxSlice, v_texCoord.y); break;
   }
 
-  color = float(texture(u_image, coords).r);
+  color = texture(u_image, coords).r;
   color = color * u_slope + u_intercept;
   color = (color - (u_wc - 0.5)) / (max(u_ww, 1.0)) + 0.5;
   color = clamp(color, 0.0, 1.0);

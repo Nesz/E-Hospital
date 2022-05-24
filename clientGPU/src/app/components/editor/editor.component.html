@@ -78,9 +78,8 @@
         >
         </app-settings>
       </div>
-      <div *ngSwitchCase="SidebarMode.HISTOGRAM" style="display: flex; flex-flow: column">
-        <app-histogram [data]="buckets"></app-histogram>
-      </div>
+        <app-histogram *ngSwitchCase="SidebarMode.HISTOGRAM" [data]="buckets"></app-histogram>
+
     </ng-container>
   </div>
 

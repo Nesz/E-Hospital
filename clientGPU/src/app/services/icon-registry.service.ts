@@ -55,7 +55,6 @@ export class IconRegistryService {
   loadDefinitions = () => {
     return this.http.get(`assets/attribs.csv`, { responseType: 'text' })
       .pipe(map(data => {
-        console.log("getting")
         const rows = data.split('\n');
         rows.map(row => {
           const split = row.split(';');

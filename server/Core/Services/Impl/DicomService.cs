@@ -98,7 +98,10 @@ public class DicomService : IDicomService
         }
 
         var seriesDate = dicom.Dataset[DicomConstats.SeriesDate].GetAsDateTime();
-        var seriesTime = dicom.Dataset[DicomConstats.SeriesTime].GetAsTimeSpan();
+        var seriesTime = dicom.Dataset.GetValueOrDefault(DicomConstats.SeriesTime, new DicomItem(
+            "",
+            TimeSpan.Zero
+        )).GetAsTimeSpan();
         var seriesDateTime = seriesDate.SetTime(seriesTime);
         var seriesOriginalId = dicom.Dataset[DicomConstats.SeriesId].GetAsString().Trim();
         var series = await _unitOfWork.Series.GetByOriginalId(seriesOriginalId);

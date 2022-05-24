@@ -37,7 +37,18 @@ export const loadLUT = (
 
   return texture!;
 }
-
+export const getMinMax = (buffer: any) => { // incoming data is an ArrayBuffer
+  let min = buffer[0];
+  let max = buffer[0];
+  for (let i = 1; i < buffer.length; i++) {
+    if (buffer[i] < min) min = buffer[i];
+    if (buffer[i] > max) max = buffer[i];
+  }
+  return {
+    min: min,
+    max: max
+  }
+}
 export const generate3DTexture = (args: {
   gl: WebGL2RenderingContext;
   pixelRepresentation: number;
@@ -47,12 +58,7 @@ export const generate3DTexture = (args: {
   width: number;
   height: number;
   depth: number;
-}): [WebGLTexture, {
-  min: number,
-  max: number,
-  bucketSize: number,
-  buckets: number[]
-}] => {
+}): WebGLTexture => {
   const gl = args.gl;
 
   const [format, internalFormat, dataType, viewType] = getEnumsFor(
@@ -60,56 +66,19 @@ export const generate3DTexture = (args: {
     args.bitsPerPixel
   );
 
-  const view = getView(args.buffer, viewType);
+   const viewD = getView(args.buffer, viewType);
 
-  const buckets = 64;
-  const view2 = new Int16Array(args.buffer, 0, 512 * 512);
-  const plot = {
-    min: 0,
-    max: 0,
-    bucketSize: 0,
-    buckets: new Array(buckets).fill(0)
-  };
-  console.log(view2)
-  const intercept = -1024;
-  const minIntensity = fastMin(view2) + intercept;
-  const maxIntensity = fastMax(view2) + intercept;
-  const binSize  = (maxIntensity - minIntensity) / buckets;
-  console.log("minIntensity: " + minIntensity)
-  console.log("maxIntensity: " + maxIntensity)
-  console.log("fastMin(view2): " + fastMin(view2))
-  console.log("fastMax(view2): " + fastMax(view2))
-  console.log(binSize)
+  console.log(viewD)
 
-  for (let i = 0; i < view2.length; ++i) {
-    const intensity = view2[i] + intercept;
-    const index = Math.floor((intensity - minIntensity) / binSize);
-    plot.buckets[index]++;
+  const view = Float32Array.from(viewD);
+
+  for (let i = 0; i < viewD.length; i++) {
+    if (viewD[i] !== view[i]) {
+      console.log(`viewD[${i}] !== view[${i}] | ${viewD[i]} !== ${view[i]}`)
+    }
   }
-  plot.min = minIntensity;
-  plot.max = maxIntensity;
-  plot.bucketSize = binSize;
-
-  console.log(plot)
-  // console.log("plot")
-  // for (let i = 0; i < plot.length; ++i) {
-  //   console.log(i + " " + plot[i])
-  // }
-
-
-
-
-
 
   const texture = gl.createTexture();
-
-
-
-
-
-  // console.log(view)
-  // console.log(fastMin(view))
-  // console.log(fastMax(view))
 
   gl.bindTexture(gl.TEXTURE_3D, texture);
 
@@ -134,7 +103,7 @@ export const generate3DTexture = (args: {
     view
   );
 
-  return [texture!, plot];
+  return texture!;
 }
 
 export const getView = (buffer: ArrayBuffer, type: string) => {
@@ -161,25 +130,25 @@ export const getEnumsFor = (
       ];
     if (pixelRepresentation == 0)
       return [
-        WebGL2RenderingContext.R16UI,
-        WebGL2RenderingContext.RED_INTEGER,
-        WebGL2RenderingContext.UNSIGNED_SHORT,
+        WebGL2RenderingContext.R16F,
+        WebGL2RenderingContext.RED,
+        WebGL2RenderingContext.FLOAT,
         'uint16',
       ];
   }
   if (bitsPerPixel == 8) {
     if (pixelRepresentation == 1)
       return [
-        WebGL2RenderingContext.R8I,
-        WebGL2RenderingContext.RED_INTEGER,
-        WebGL2RenderingContext.UNSIGNED_BYTE,
+        WebGL2RenderingContext.R16F,
+        WebGL2RenderingContext.RED,
+        WebGL2RenderingContext.FLOAT,
         'int8',
       ];
     if (pixelRepresentation == 0)
       return [
-        WebGL2RenderingContext.R8UI,
-        WebGL2RenderingContext.RED_INTEGER,
-        WebGL2RenderingContext.UNSIGNED_BYTE,
+        WebGL2RenderingContext.R16F,
+        WebGL2RenderingContext.RED,
+        WebGL2RenderingContext.FLOAT,
         'uint8',
       ];
   }

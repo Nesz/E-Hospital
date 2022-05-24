@@ -7,11 +7,11 @@ export class Shader {
   constructor(program: WebGLProgram, uniforms: Uniforms) {
     this.program = program;
     this.uniforms = uniforms;
-    console.log(uniforms)
+    // console.log(uniforms)
   }
 
   assignUniforms = (gl: WebGL2RenderingContext, data: any) => {
-    console.log(this.uniforms)
+    // console.log(this.uniforms)
     for (const key of Object.keys(this.uniforms)) {
       const { type, location } = this.uniforms[key];
       switch (type) {

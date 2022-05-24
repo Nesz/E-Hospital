@@ -20,13 +20,6 @@ export class ShaderService {
     return this.http.get(`assets/${path}`, { responseType: 'text' });
   };
 
-  matchShadersFor = (pixelRepresentation: number, bitsPerPixel: number) => {
-    if (pixelRepresentation == 1) {
-      return ['shaders/shader_frag_signed.glsl', 'shaders/shader_vert.glsl'];
-    }
-    return ['shaders/shader_frag_unsigned.glsl', 'shaders/shader_vert.glsl'];
-  };
-
   createProgramFromAssets =
     (gl: WebGL2RenderingContext,
      vertPath: string,
