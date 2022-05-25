@@ -84,6 +84,9 @@ export type LookupTablesData = RawLutData[]
 
 export interface LookupTable {
   name: string,
+  r: number[],
+  g: number[],
+  b: number[],
   texture: WebGLTexture;
 }
 

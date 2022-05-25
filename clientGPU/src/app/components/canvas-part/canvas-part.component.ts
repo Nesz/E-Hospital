@@ -39,8 +39,6 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
   isInverted: boolean = false;
 
   isRendered = false;
-  fps = 30;
-  timer = new FpsLoop(this.fps, () => this.nextSlice());
 
   constructor(
     private readonly zone: NgZone
@@ -70,8 +68,8 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
   getTagValue(tag: any) {
     return this.editor.dicom?.getValue(tag, false)?.asString();
   }
+
   public writeInfoOntoCanvas2D() {
-    console.log(this.editor.props.pixelSpacing)
     const spacing = [
       this.editor.props.pixelSpacing[0].toFixed(2),
       this.editor.props.pixelSpacing[1].toFixed(2),
@@ -80,12 +78,12 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
     const dimensions = this.getTextureDimensions();
     const modality = this.getTagValue(Tag.MODALITY);
     const curSlice = this.currentSlice + 1;
-    const maxSlice = this.editor.slicesCountForPlane(this.plane);
+    const maxSlice = this.editor.slicesCountForPlane(this.plane) + 1;
     const ctx = this.context2D;
     const bottom = ctx.canvas.height;
     ctx.font = 'bold 15px Arial';
     ctx.fillStyle = '#fff';
-    ctx.fillText(`Frame: ${curSlice} / ${maxSlice}`, 10, bottom - 100);
+    ctx.fillText(`Slice: ${curSlice} / ${maxSlice}`, 10, bottom - 100);
     ctx.fillText(`Zoom: ${this.camera.zoom.toFixed(2)}x`, 10, bottom - 80);
     ctx.fillText(`Window/Level: ${this.windowing.ww} / ${this.windowing.wc}`, 10, bottom - 60);
     ctx.fillText(`Spacing x/y: ${spacing[0]}/${spacing[1]}`, 10, bottom - 40);
@@ -171,19 +169,6 @@ export class CanvasPartComponent implements AfterViewInit, OnDestroy {
       this.windowing.ww = newVal;
 
     this.onChanges.emit(this);
-  }
-
-  public fpsChanged($event: Event) {
-    this.fps = Number(($event.target as HTMLInputElement).value);
-    this.timer.changeFPS(this.fps)
-  }
-
-  public togglePlayer() {
-    if (this.timer.isPlaying) {
-      this.timer.stop();
-    } else {
-      this.timer.start();
-    }
   }
 
   changeLut($event: Event) {

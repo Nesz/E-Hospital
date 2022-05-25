@@ -19,7 +19,7 @@ public class ByteStream
     public int ReadInt32() => BitConverter.ToInt32(ReadBytes(4), 0);
     public long ReadInt64() => BitConverter.ToInt64(ReadBytes(8), 0);
     
-    public uint ReadUInt16() => BitConverter.ToUInt16(ReadBytes(2), 0);
+    public ushort ReadUInt16() => BitConverter.ToUInt16(ReadBytes(2), 0);
     public uint ReadUInt32() => BitConverter.ToUInt32(ReadBytes(4), 0);
     public ulong ReadUInt64() => BitConverter.ToUInt64(ReadBytes(8), 0);
     

@@ -29,10 +29,6 @@
       <app-icon class="tools--list--entry__icon" icon="reset"></app-icon>
       <span class="tools--list--entry__tooltip">Reset</span>
     </span>
-    <span class="tools--list--entry" (click)="readCurrentSlicePixels()">
-      <app-icon class="tools--list--entry__icon" icon="reset"></app-icon>
-      <span class="tools--list--entry__tooltip">read</span>
-    </span>
   </div>
 
   <div #parent class="editor--wrapper">
@@ -78,7 +74,7 @@
         >
         </app-settings>
       </div>
-        <app-histogram *ngSwitchCase="SidebarMode.HISTOGRAM" [data]="buckets"></app-histogram>
+        <app-histogram #histogram *ngSwitchCase="SidebarMode.HISTOGRAM"></app-histogram>
 
     </ng-container>
   </div>

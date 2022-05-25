@@ -2,14 +2,14 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
-  Input,
+  forwardRef,
+  Inject,
   OnChanges,
-  OnInit,
   SimpleChanges,
   ViewChild
 } from "@angular/core";
-import { CanvasPartComponent } from "../canvas-part/canvas-part.component";
-import { fastMax, getMinMax } from "../../helpers/canvas.helper";
+import { getMinMax } from "../../helpers/canvas.helper";
+import { EditorComponent } from "../editor/editor.component";
 
 @Component({
   selector: 'app-histogram',
@@ -19,47 +19,90 @@ import { fastMax, getMinMax } from "../../helpers/canvas.helper";
 export class HistogramComponent implements AfterViewInit, OnChanges {
   @ViewChild('histogram') canvas!: ElementRef<HTMLCanvasElement>;
   private context!: CanvasRenderingContext2D;
+  public buckets: number = 64;
 
-  constructor(private readonly ref: ElementRef) { }
-
-  @Input() data!: {
-    min: number,
-    max: number,
-    bucketSize: number,
-    buckets: number[]
-  };
+  constructor(@Inject(forwardRef(() => EditorComponent)) public readonly editor: EditorComponent) { }
 
   ngAfterViewInit(): void {
     this.context = this.canvas.nativeElement.getContext('2d')!;
+    this.drawHistogram();
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    this.readPixels();
+    this.drawHistogram();
   }
 
-  public readPixels() {
-    // this.render(canvasPart);
-    // const gl = this.context;
-    // const view = new Uint8Array(512*512 * 4);
-    // gl.readPixels(0, 0, 512, 512, gl.RGBA, gl.UNSIGNED_BYTE, view);
-    // console.log(view)
-    // const buckets = Array(512);
-    // for (let i = 0; i < view.length; i +=4) {
-    //   const r = view[i + 0];
-    //   const g = view[i + 1];
-    //   const b = view[i + 2];
-    //
-    // }
+  public onBucketChange($event: Event) {
+    this.buckets = Number(($event.target as HTMLInputElement).value);
+    this.drawHistogram();
+  }
 
-    const data = this.data;
+  public plotBuckets(pixels: Float32Array, buckets: number) {
+    const { min, max } = getMinMax(pixels);
+    const bucketSize  = (max - min) / buckets;
+    const bucketsList = new Array(buckets).fill(0)
+
+    for (let i = 0; i < pixels.length; ++i) {
+      const pixel = pixels[i];
+      const index = Math.floor((pixel - min) / bucketSize);
+      bucketsList[index]++;
+    }
+
+    return {
+      min: min,
+      max: max,
+      bucketSize: bucketSize,
+      buckets: bucketsList
+    };
+  }
+
+  public drawHistogram() {
+    const data = this.plotBuckets(this.editor.readCurrentSlicePixels(), this.buckets);
+
     const ctx = this.context;
+
+    if (!ctx) {
+      return;
+    }
+
+    const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
+    const { wc, ww } = this.editor.currentCanvas.windowing;
+    const colors = [];
+    for (let i = 0; i < data.buckets.length - 1; ++i) {
+      // color = (color - (u_wc - 0.5)) / (max(u_ww, 1.0)) + 0.5;
+      // color = clamp(color, 0.0, 1.0);
+      const intensityMin = data.min + i * data.bucketSize;
+      const intensityMax = data.max + i * (data.bucketSize + 1);
+      const intensityAvg = (intensityMin + intensityMax) / 2;
+
+      let color = (intensityMin - (wc - 0.5)) / (Math.max(ww, 1.0)) + 0.5;
+      color = Math.round(clamp(color, 0.0, 1.0) * 255);
+      const inverted = this.editor.currentCanvas.isInverted;
+      if (!inverted)
+        colors.push(
+          [
+            this.editor.currentCanvas.lut.r[color],
+            this.editor.currentCanvas.lut.g[color],
+            this.editor.currentCanvas.lut.b[color]
+          ]
+        )
+      else
+        colors.push(
+          [
+            255 - this.editor.currentCanvas.lut.r[color],
+            255 - this.editor.currentCanvas.lut.g[color],
+            255 - this.editor.currentCanvas.lut.b[color]
+          ]
+        )
+    }
+
 
     const width = this.canvas.nativeElement.clientWidth;
     const height = this.canvas.nativeElement.clientHeight;
 
     const histogramXOffset = 50;
-    const desiredHistogramWidth = 700;
-    const histogramHeight = 750;
+    const desiredHistogramWidth = width - 100;
+    const histogramHeight = height - 100;
 
     ctx.imageSmoothingEnabled = false;
 
@@ -71,87 +114,33 @@ export class HistogramComponent implements AfterViewInit, OnChanges {
     ctx.fillRect(0, 0, width, height);
 
 
-    console.log("================================")
-    console.log(data.buckets)
     const { max } = getMinMax(data.buckets);
-    console.log(max)
     // const bucketWidth = desiredHistogramWidth / (data.buckets.length - 1)
     // const bucketWidth = Math.ceil(desiredHistogramWidth / (data.buckets.length - 1))
 
-    const bucketWidth = (Math.round(((desiredHistogramWidth/ (data.buckets.length - 1))) * 100) / 100)
+    const bucketWidth = Math.round(desiredHistogramWidth / (data.buckets.length - 1) * 100) / 100
     let histogramWidth = bucketWidth * (data.buckets.length - 1) + bucketWidth;
+
+
     const heightPixelRatio = ((histogramHeight - 50) / max);
 
-    console.log("bucketWidth: " + bucketWidth)
-    console.log("histogramWidth: " + histogramWidth)
     const minSpacing = 50;
     let lastLabel = 0;
+
     for (let i = 0; i < data.buckets.length - 1; ++i) {
-      ctx.fillStyle = '#000';
+      ctx.fillStyle = `rgb(${colors[i][0]}, ${colors[i][1]}, ${colors[i][2]})`;
       const x = histogramXOffset + i * bucketWidth;
-      // console.log(`bucket: ${i} at x: ${i * bucketWidth}`)
-      ctx.fillRect(
-        x,
-        histogramHeight,
-        bucketWidth,
-        -data.buckets[i] * heightPixelRatio
-      );
+      ctx.fillRect(x, histogramHeight, bucketWidth, -data.buckets[i] * heightPixelRatio);
+      ctx.fillRect(x, histogramHeight + 20, bucketWidth, 20);
       if (x >= lastLabel + minSpacing) {
-        console.log('label for bucket: ' + i)
         ctx.font = 'bold 12px Arial';
         ctx.fillStyle = '#000';
         ctx.textAlign = 'center';
-        ctx.fillText(`${Math.floor(data.min + i * data.bucketSize)}`,
-          x,
-          histogramHeight + 20
-        );
+        ctx.fillText(`${Math.floor(data.min + i * data.bucketSize)}`, x, histogramHeight + 60);
         lastLabel = x;
       }
     }
 
-
-    // draw Y axis {
-    // ctx.strokeStyle = '#ff6b6b';
-    // ctx.beginPath();
-    // ctx.moveTo(histogramXOffset, histogramHeight);
-    // ctx.lineTo(histogramXOffset, height - histogramHeight);
-    // ctx.closePath();
-    // ctx.stroke();
-
-    // draw X axis {
-    ctx.strokeStyle = '#ff6b6b';
-    ctx.beginPath();
-    ctx.moveTo(histogramXOffset, histogramHeight);
-    ctx.lineTo(histogramXOffset + histogramWidth, histogramHeight);
-    ctx.closePath();
-    ctx.stroke();
-
-
-    // console.log(data)
-    // const minSpacing = 50;
-    // const labelsCount = Math.floor(histogramWidth / minSpacing);
-    // // this.drawXLabel(histogramXOffset)
-    // ctx.font = 'bold 12px Arial';
-    // ctx.fillStyle = '#000';
-    // ctx.textAlign = 'center';
-    // // ctx.fillText(`${data.min}`, histogramXOffset, histogramHeight + 20);
-    // // ctx.fillText(`${data.max}`, histogramWidth, histogramHeight + 20);
-    // console.log("bucketWidth: " + bucketWidth)
-    // for (let i = 0; i < labelsCount; ++i) {
-    //   const x = histogramXOffset + i * minSpacing;
-    //   const bucket = Math.floor((i * minSpacing) / bucketWidth);
-    //   console.log("bucket: " + bucket)
-    //   ctx.fillText(`${Math.floor(data.min + bucket * data.bucketSize)}`, x, histogramHeight + 20);
-    // }
-
   }
-
-  private drawXLabels(x: number) {
-    const minDistance = 100;
-
-    const labels = [];
-
-  }
-
 
 }

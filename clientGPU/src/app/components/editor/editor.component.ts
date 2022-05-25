@@ -58,6 +58,8 @@ import { TableData } from "../nestable-table/nestable-table.component";
 import { IconRegistryService } from "../../services/icon-registry.service";
 import { layouts } from "../../dicom.constants";
 import { Settings } from "../settings/settings.component";
+import { HistogramComponent } from "../histogram/histogram.component";
+import { FpsLoop } from "../../helpers/fps-loop";
 
 @Component({
   selector: 'app-editor',
@@ -70,6 +72,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   @ViewChild('progressIndicator') progressIndicator!: ProgressRingComponent;
   @ViewChild('sidebar') sidebar!: ElementRef<HTMLDivElement>;
   @ViewChild('parent') parent!: ElementRef<HTMLSpanElement>;
+  @ViewChild('histogram') histogram!: HistogramComponent;
 
   readonly SidebarMode: typeof SidebarMode = SidebarMode;
   sidebarMode: SidebarMode = SidebarMode.NONE;
@@ -114,8 +117,20 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     texture3d: WebGLTexture;
   };
 
+  public sliceProps: {
+    plane: Plane,
+    slice: number,
+    minWW: number,
+    maxWW: number,
+    minWC: number,
+    maxWC: number
+  }[] = [];
+
+  private histogramFrameBuffer!: WebGLFramebuffer;
   private positionBuffer!: WebGLBuffer;
   private texCoordBuffer!: WebGLBuffer;
+  private positionBufferHistogram!: WebGLBuffer;
+  private texCoordBufferHistogram!: WebGLBuffer;
   private texCoordLocation!: number;
   private positionLocation!: number;
   private texCoordLocationH!: number;
@@ -128,6 +143,9 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   download?: Download
 
   buckets!: any;
+
+  fps = 30;
+  timer = new FpsLoop(this.fps, () => this.currentCanvas.nextSlice());
 
   constructor(
     private readonly httpClient: HttpClient,
@@ -162,6 +180,19 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     this.api.addArea(routeParams.get('seriesId')!, shape).subscribe(x => {
       console.log(x)
     })
+  }
+
+  public fpsChanged($event: Event) {
+    this.fps = Number(($event.target as HTMLInputElement).value);
+    this.timer.changeFPS(this.fps)
+  }
+
+  public togglePlayer() {
+    if (this.timer.isPlaying) {
+      this.timer.stop();
+    } else {
+      this.timer.start();
+    }
   }
 
   public ngOnDestroy() {
@@ -309,12 +340,29 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
   private initBuffers() {
     const gl = this.context;
+    this.histogramFrameBuffer = gl.createFramebuffer()!;
     this.positionBuffer = gl.createBuffer()!;
     this.texCoordBuffer = gl.createBuffer()!;
+    this.positionBufferHistogram = gl.createBuffer()!;
+    this.texCoordBufferHistogram = gl.createBuffer()!;
     gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0]), gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0]), gl.STATIC_DRAW);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBufferHistogram);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -1, -1, -1, 1, 1, -1,
+      1, 1, 1, -1, -1, 1,
+    ]), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBufferHistogram);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      0.0, 1.0,
+      0.0, 0.0,
+      1.0, 1.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 0.0]), gl.STATIC_DRAW);
   };
 
   public getCanvasPartFromMousePosition(x: number, y: number) {
@@ -342,57 +390,23 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     }
   }
 
-  public plotBuckets() {
-    const buckets = 512;
-    const pixels = this.readCurrentSlicePixels();
-    const { min, max } = getMinMax(pixels);
-    const bucketSize  = (max - min) / buckets;
-    const bucketsList = new Array(buckets).fill(0)
-
-    for (let i = 0; i < pixels.length; ++i) {
-      const pixel = pixels[i];
-      const index = Math.floor((pixel - min) / bucketSize);
-      bucketsList[index]++;
-    }
-
-    return {
-      min: min,
-      max: max,
-      bucketSize: bucketSize,
-      buckets: bucketsList
-    };
-  }
-
   public readCurrentSlicePixels() {
     const gl = this.context;
     const canvasPart = this.currentCanvas;
 
     const { width, height } = this.getDimensionsForPlane(canvasPart.plane);
-
     const shader = this.programs['histogram'];
+
     gl.disable(gl.SCISSOR_TEST)
-    gl.viewport(0, 0, width, height);
+    gl.viewport(0, 0, width, height)
     gl.useProgram(shader.program);
 
-    {
-      const positionBuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-        -1, -1, -1, 1, 1, -1,
-        1, 1, 1, -1, -1, 1,
-      ]), gl.STATIC_DRAW);
-      gl.vertexAttribPointer(this.positionLocationH, 2, gl.FLOAT, false, 0, 0);
-      const texCoordBuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-        0.0, 1.0,
-        0.0, 0.0,
-        1.0, 1.0,
-        1.0, 0.0,
-        1.0, 1.0,
-        0.0, 0.0]), gl.STATIC_DRAW);
-      gl.vertexAttribPointer(this.texCoordLocationH, 2, gl.FLOAT, false, 0, 0);
-    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBufferHistogram);
+    gl.vertexAttribPointer(this.positionLocationH, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBufferHistogram);
+    gl.vertexAttribPointer(this.texCoordLocationH, 2, gl.FLOAT, false, 0, 0);
+
 
     // creating texture
     const targetTexture = gl.createTexture();
@@ -403,13 +417,9 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     // gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-    const frameBuffer = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, 0);
 
-    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
-      alert("this combination of attachments does not work");
-    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.histogramFrameBuffer);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, 0);
 
     const uniforms = {
       u_slope: this.props.slope,
@@ -437,7 +447,9 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 6);
     gl.readPixels(0, 0, width, height, gl.RED, gl.FLOAT, results);
 
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.deleteTexture(targetTexture);
+
     return results;
   }
 
@@ -496,8 +508,19 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
     this.renderMeasurements(canvasPart);
-    this.buckets = this.plotBuckets();
+    this.histogram?.drawHistogram();
   };
+
+  getSliceProps(pixels: Float32Array) {
+    const { min, max } = getMinMax(pixels);
+    const { intercept } = this.props;
+    return {
+      minWW: 1,
+      maxWW: max - min,
+      minWC: min,
+      maxWC: max,
+    }
+  }
 
   renderMeasurements(canvasPart: CanvasPartComponent) {
     const bbox = canvasPart.canvas?.nativeElement.getBoundingClientRect()!;
@@ -661,6 +684,9 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         this.lookupTables = data.map(lut => {
           return {
             name: lut.name,
+            r: lut.r,
+            g: lut.g,
+            b: lut.b,
             texture: loadLUT(this.context, lut)
           }
         })
@@ -692,7 +718,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     );
   };
 
-  private getDefaultWindowing(): Windowing {
+  public getDefaultWindowing(): Windowing {
     const dicom = this.dicom;
     if (dicom.hasTag(Tag.WINDOW_CENTER) && dicom.hasTag(Tag.WINDOW_WIDTH)) {
       let wc = dicom.getValue(Tag.WINDOW_CENTER, true).value;

@@ -4,6 +4,7 @@ import { EditorComponent } from "../editor/editor.component";
 import { CanvasPartComponent } from "../canvas-part/canvas-part.component";
 import { mat3, vec2 } from "gl-matrix";
 import { degreesToRadians, radiansToDegrees } from "../../helpers/canvas.helper";
+import { windowingPresets } from "../../dicom.constants";
 
 export interface Settings {
   slice: {
@@ -42,6 +43,8 @@ export class SettingsComponent implements OnInit {
 
   public isSynchronized: boolean = false;
 
+  windowingPresets = windowingPresets;
+
   constructor(
     @Inject(forwardRef(() => EditorComponent)) public readonly editor: EditorComponent
   ) {
@@ -50,6 +53,13 @@ export class SettingsComponent implements OnInit {
 
   get scene(): CanvasPartComponent {
     return this.editor.currentCanvas;
+  }
+
+  get sliceProps() {
+    return this.editor.sliceProps.find(p =>
+      p.slice === this.scene.currentSlice &&
+      p.plane === this.scene.plane
+    );
   }
 
   ngOnInit(): void {
@@ -99,7 +109,6 @@ export class SettingsComponent implements OnInit {
         .find(lut => lut.name === ($event.target as HTMLInputElement).value)!;
       this.editor.render(this.scene)
     }
-
   }
 
   private zoom(scene: CanvasPartComponent, $event: number) {
@@ -178,6 +187,30 @@ export class SettingsComponent implements OnInit {
       })
     } else {
       this.scene.isInverted = !this.scene.isInverted;
+      this.editor.render(this.scene)
+    }
+  }
+
+  changeWindowingPreset($event: Event) {
+    const presetName = ($event.target as HTMLInputElement).value;
+    const preset = windowingPresets.find(p => p.name === presetName);
+
+    let { ww, wc } = this.editor.getDefaultWindowing();
+    if (preset) {
+      ww = preset.ww;
+      wc = preset.wc;
+    }
+
+    if (this.isSynchronized) {
+      this.editor.canvases.forEach(ref => {
+        const scene = ref.instance;
+        scene.windowing.ww = ww;
+        scene.windowing.wc = wc;
+        this.editor.render(scene)
+      })
+    } else {
+      this.scene.windowing.ww = ww;
+      this.scene.windowing.wc = wc;
       this.editor.render(this.scene)
     }
   }

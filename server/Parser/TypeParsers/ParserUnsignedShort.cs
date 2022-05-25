@@ -10,7 +10,7 @@ public class ParserUnsignedShort : IDataTypeParser
             return null;
                 
         var arrLength = length / 2;
-        var arr = new uint[arrLength];
+        var arr = new ushort[arrLength];
         for (var i = 0; i < arrLength; ++i)
             arr[i] = byteStream.ReadUInt16();
             
