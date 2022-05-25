@@ -37,4 +37,23 @@ export class Camera {
 
     mat3.multiply(this.viewProjectionMat, projectionMat, viewMat);
   }
+
+  public rotateAroundCenter() {
+    // mat3.translate(
+    //   camMat,
+    //   camMat,
+    //   vec2.fromValues(dimensions.width / 2, dimensions.height / 2)
+    // );
+    // mat3.rotate(camMat, camMat, delta);
+    // mat3.translate(
+    //   camMat,
+    //   camMat,
+    //   vec2.fromValues(-dimensions.width / 2, -dimensions.height / 2)
+    // );
+
+  }
+
+  private degToRad(deg: number): number {
+    return deg * Math.PI / 180;
+  }
 }

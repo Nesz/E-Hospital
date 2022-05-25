@@ -1,59 +1,17 @@
 <div class="canvas-part">
-  <div class="canvas-part--header__wrapper">
-    <div class="canvas-part--header">
-      <div class="setting">
-        <span>Orientation</span>
-        <select
-          class="canvas-part--header__axis"
-          [value]="canvasPart.orientation"
-          (change)="changeAxis($event)"
-        >
-          <option value="x">Sagittal (x axis)</option>
-          <option value="y">Coronal (y axis)</option>
-          <option value="z">Transverse (z axis)</option>
-        </select>
-      </div>
-      <div class="setting">
-        <span>WC</span>
-        <input type="number" [value]="canvasPart.windowing.wc" (input)="windowingChanged('wc', $event)">
-      </div>
-      <div class="setting">
-        <span>WW</span>
-        <input type="number" [value]="canvasPart.windowing.ww" (input)="windowingChanged('ww', $event)">
-      </div>
-      <div class="player">
-        <app-icon
-          class="player--icon"
-          (click)="togglePlayer()"
-          [icon]="timer.isPlaying ? 'pause' : 'play'"></app-icon>
-        <input
-          type="range"
-          name="frame"
-          min="1"
-          max="100"
-          [value]="fps"
-          (input)="fpsChanged($event)"
-        />
-        <span class="player--fps">{{ fps }} fps</span>
-      </div>
-    </div>
+  <div #canvas id="draw-area" class="canvas-part__draw-area">
+    <canvas #canvas2d class="wrapper2d"></canvas>
   </div>
-  <div #canvas id="draw-area" class="canvas-part__draw-area"></div>
   <div class="canvas-part--slider">
     <div class="canvas-part--slider__holder">
       <input
         type="range"
         name="frame"
         min="0"
-        max="{{ slices.slices.length - 1 }}"
-        [value]="canvasPart.currentSlice"
+        max="{{ editor.slicesCountForPlane(plane) }}"
+        [value]="currentSlice"
         (input)="changeSlice($event)"
       />
     </div>
-  </div>
-  <div class="debug">
-    <div class="debug__text">Slice: {{ canvasPart.currentSlice }}</div>
-    <div class="debug__text">Zoom: {{ canvasPart.camera.zoom.toFixed(2) }} </div>
-    <div class="debug__text">Size: {{ getWidth() }}x{{ getHeight() }}</div>
   </div>
 </div>

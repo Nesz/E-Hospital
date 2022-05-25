@@ -19,6 +19,11 @@ import { DelayedInputComponent } from './delayed-input/delayed-input.component';
 import { PatientComponent } from './pages/patient/patient.component';
 import { ClickOutsideDirective } from "./directives/click-outside.directive";
 import { AreasSidebarComponent } from './components/areas-sidebar/areas-sidebar.component';
+import { NestableTableComponent } from './components/nestable-table/nestable-table.component';
+import { KeysPipe } from './pipes/keys.pipe';
+import { InputRangeComponent } from './components/input-range/input-range.component';
+import { SettingsComponent } from './components/settings/settings.component';
+import { HistogramComponent } from './components/histogram/histogram.component';
 
 @NgModule({
   declarations: [
@@ -37,6 +42,11 @@ import { AreasSidebarComponent } from './components/areas-sidebar/areas-sidebar.
     PatientComponent,
     ClickOutsideDirective,
     AreasSidebarComponent,
+    NestableTableComponent,
+    KeysPipe,
+    InputRangeComponent,
+    SettingsComponent,
+    HistogramComponent,
   ],
   imports: [BrowserModule, AppRoutingModule, HttpClientModule, FormsModule, ReactiveFormsModule],
   providers: [],

@@ -55,8 +55,14 @@ namespace DicomViewer3.Migrations
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<string>("MongoId")
-                        .HasColumnType("text");
+                    b.Property<long>("ChunkSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DicomMeta")
+                        .HasColumnType("jsonb");
+
+                    b.Property<long>("FileOffset")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("OriginalId")
                         .HasColumnType("bigint");
@@ -82,6 +88,9 @@ namespace DicomViewer3.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FilePath")
                         .HasColumnType("text");
 
                     b.Property<string>("Modality")

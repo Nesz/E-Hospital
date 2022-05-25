@@ -1,6 +1,4 @@
 import { Component, ElementRef, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
-import { animationFrameScheduler, of, timer } from 'rxjs';
-import { repeat, takeUntil, takeWhile } from 'rxjs/operators';
 
 @Component({
   selector: 'app-progress-ring',
@@ -13,7 +11,6 @@ export class ProgressRingComponent implements OnInit, OnChanges {
   @Input() stroke = 0;
   @Input() progress = 0;
   @Input() label = 'loading...';
-  ringClosed = false;
 
   normalizedRadius = this.radius - this.stroke * 2;
   circumference = this.normalizedRadius * 2 * Math.PI;

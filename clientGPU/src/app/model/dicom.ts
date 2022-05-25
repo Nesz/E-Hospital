@@ -1,10 +1,8 @@
+import { Dictionary } from "./interfaces";
+
 interface entry {
   vr: string;
   value: any;
-}
-
-export class Dictionary<T> {
-  [Key: string]: T;
 }
 
 export interface request {

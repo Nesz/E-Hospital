@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Core.Dtos;
 using Core.Entities;
@@ -31,6 +33,12 @@ public class SeriesController
     {
         return await _seriesService.GetSeriesByPatientAndSeriesId(patientId, seriesId);
     }
+    
+    [HttpGet("{seriesId:long}/meta")]
+    public async Task<dynamic> GetInstanceMetaForSeries([FromRoute] long seriesId)
+    {
+        return await _seriesService.GetInstanceMetaForSeries(seriesId);
+    }
         
     [HttpPost("{seriesId:long}/area")]
     public async Task<AreaDto> AddArea([FromRoute] long seriesId, [FromBody] AreaAddRequestDto request)
@@ -55,5 +63,10 @@ public class SeriesController
     {
         return await _seriesService.GetAreas(seriesId);
     }
-        
+    
+    [HttpGet("{seriesId:long}/stream")]
+    public async Task<FileStreamResult> GetSeriesStream([FromRoute] long seriesId)
+    {
+        return await _seriesService.GetSeriesStream(seriesId);
+    }
 }

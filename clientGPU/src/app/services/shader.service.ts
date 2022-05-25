@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin, Observable } from "rxjs";
+import { forkJoin } from "rxjs";
 import { map } from 'rxjs/operators';
 
 export interface Uniforms {
@@ -18,13 +18,6 @@ export class ShaderService {
 
   loadFileFromAssets = (path: string) => {
     return this.http.get(`assets/${path}`, { responseType: 'text' });
-  };
-
-  matchShadersFor = (pixelRepresentation: number, bitsPerPixel: number) => {
-    if (pixelRepresentation == 1) {
-      return ['shaders/shader_frag_signed.glsl', 'shaders/shader_vert.glsl'];
-    }
-    return ['shaders/shader_frag_unsigned.glsl', 'shaders/shader_vert.glsl'];
   };
 
   createProgramFromAssets =

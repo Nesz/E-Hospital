@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
-import { Shape } from "../../model/interfaces";
+import { Measurement } from "../../model/interfaces";
 import { EditorComponent } from "../editor/editor.component";
 import { ApiService } from "../../services/api.service";
 import { tap } from "rxjs/operators";
@@ -14,18 +14,9 @@ export class AreasSidebarComponent implements OnInit {
 
   @Input() editor!: EditorComponent;
   @Input() isHidden = false;
-  @Input() shapes: Shape[] = [];
+  @Input() shapes: Measurement[] = [];
   @Output() onEvent = new EventEmitter<string>();
   readonly DicomTag: typeof Tag = Tag;
-
-  readonly infoToDisplay: [string, () => string][] = [
-    [ "Description: ", (() => this.getTagValue(Tag.SERIES_DESCRIPTION)) ],
-    [ "Date: ", (() => this.getTagValue(Tag.SERIES_DATE)) ],
-    [ "Modality: ", (() => this.getTagValue(Tag.MODALITY)) ],
-    [ "Patient Name: ", (() => this.getTagValue(Tag.PATIENT_NAME)) ],
-    [ "Patient Gender: ", (() => this.getTagValue(Tag.PATIENT_SEX)) ],
-    [ "Slices: ", (() => `${this.editor.orientation.z.slices.length}`) ]
-  ]
 
   constructor(private readonly apiService: ApiService) { }
 
@@ -33,20 +24,20 @@ export class AreasSidebarComponent implements OnInit {
 
   }
 
-  toggleDetails(shape: Shape) {
+  toggleDetails(shape: Measurement) {
     shape.detailsToggled = !shape.detailsToggled;
   }
 
-  goToArea(shape: Shape) {
+  goToArea(shape: Measurement) {
     const canvas = this.editor.canvases
-      .find(c => c.instance.canvasPart.orientation === shape.orientation) ?? this.editor.canvases[0];
+      .find(c => c.instance.plane === shape.plane) ?? this.editor.canvases[0];
 
-    canvas.instance.canvasPart.currentSlice = shape.slice;
-    canvas.instance.canvasPart.orientation = shape.orientation;
+    canvas.instance.currentSlice = shape.slice;
+    canvas.instance.plane = shape.plane;
     this.editor.render(canvas.instance);
   }
 
-  delete(shape: Shape) {
+  delete(shape: Measurement) {
     this.apiService.deleteArea(this.editor.seriesId, shape)
       .pipe(tap(() => {
         const shapeToDelete = this.shapes.findIndex(s => s.id === shape.id);
@@ -54,8 +45,8 @@ export class AreasSidebarComponent implements OnInit {
         const canvas = this.editor.canvases
           .map(c => c.instance)
           .find(c =>
-            c.canvasPart.orientation === shape.orientation &&
-            c.canvasPart.currentSlice === shape.slice
+            c.plane === shape.plane &&
+            c.currentSlice === shape.slice
           );
         if (canvas) {
           this.editor.render(canvas);
@@ -64,25 +55,23 @@ export class AreasSidebarComponent implements OnInit {
       .subscribe()
   }
 
-  hide(shape: Shape) {
+  hide(shape: Measurement) {
     shape.isVisible = !shape.isVisible;
     const canvas = this.editor.canvases
       .map(c => c.instance)
       .find(c =>
-        c.canvasPart.orientation === shape.orientation &&
-        c.canvasPart.currentSlice === shape.slice
+        c.plane === shape.plane &&
+        c.currentSlice === shape.slice
       );
     if (canvas) {
       this.editor.render(canvas);
     }
   }
 
-  updateLabel($event: Event, shape: Shape) {
+  updateLabel($event: Event, shape: Measurement) {
     shape.label = ($event.target as HTMLInputElement).value;
     this.apiService.updateAreaLabel(this.editor.seriesId, shape).subscribe();
   }
 
-  getTagValue(tag: any) {
-    return this.editor.dicom?.getValue(tag, false)?.asString();
-  }
+
 }

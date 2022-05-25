@@ -1,16 +1,24 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using AutoMapper;
+using AutoMapper.Internal;
 using Core.Dtos;
 using Core.Entities;
+using Core.Helpers;
 using Core.Models;
 using Core.Repositories;
+using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 
 namespace Core.Services.Impl;
 
 public class SeriesService : ISeriesService
 {
-
+    
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
@@ -35,6 +43,13 @@ public class SeriesService : ISeriesService
     {
         var series = await _unitOfWork.Series.GetSeriesByPatientAndSeriesId(patientId, seriesId);
         return _mapper.Map<SeriesDto>(series);
+    }
+
+    public async Task<dynamic> GetInstanceMetaForSeries(long seriesId)
+    {
+        var series = await _unitOfWork.Series.GetById(seriesId);
+        var instance = await _unitOfWork.Instances.GetInstanceById(series.Instances.First().Id);
+        return instance.DicomMeta;
     }
 
     public async Task<AreaDto> AddArea(long seriesId, AreaAddRequestDto request)
@@ -70,5 +85,12 @@ public class SeriesService : ISeriesService
     {
         var areas = await _unitOfWork.Areas.GetAreasBySeriesId(seriesId);
         return _mapper.Map<IList<AreaDto>>(areas);
+    }
+
+    public async Task<FileStreamResult> GetSeriesStream(long seriesId)
+    {
+        var series = await _unitOfWork.Series.GetById(seriesId);
+        var sourceStream = File.Open(series.FilePath, FileMode.OpenOrCreate);
+        return new FileStreamResult(sourceStream, "application/octet-stream");
     }
 }

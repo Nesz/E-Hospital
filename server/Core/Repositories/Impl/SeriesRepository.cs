@@ -19,7 +19,9 @@ public class SeriesRepository : ISeriesRepository
 
     public async Task<Series> GetById(long id)
     {
-        return await _context.Series.FirstOrDefaultAsync(series => series.Id == id);
+        return await _context.Series
+            .Include(serie => serie.Instances)
+            .FirstOrDefaultAsync(series => series.Id == id);
     }
 
     public async Task<Series> GetByOriginalId(string originalId)

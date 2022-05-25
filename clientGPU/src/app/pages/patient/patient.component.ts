@@ -4,8 +4,7 @@ import { ApiService, Series } from "../../services/api.service";
 import { TableComponent } from "../../components/table/table.component";
 import { HttpEventType } from "@angular/common/http";
 import { SignalRService } from "../../services/signal-r.service";
-import { User } from "../../model/interfaces";
-import { OrderDirection, Role } from "../../model/enums";
+import { OrderDirection, Role, User } from "../../model/interfaces";
 import { AuthenticationService } from "../../services/authentication.service";
 
 @Component({

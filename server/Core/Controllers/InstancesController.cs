@@ -16,13 +16,7 @@ public class InstancesController
     {
         _instanceService = instanceService;
     }
-        
-    [HttpGet("{instanceId:long}")]
-    public async Task<Stream> GetInstanceStream([FromRoute] long instanceId)
-    {
-        return await _instanceService.GetInstanceStream(instanceId);
-    }
-        
+
     [HttpGet("{instanceId:long}/meta")]
     public async Task<dynamic> GetInstanceMeta([FromRoute] long instanceId)
     {

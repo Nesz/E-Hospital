@@ -9,6 +9,10 @@ public class Instance
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public long Id { get; set; }
     public long OriginalId { get; set; }
-    public string MongoId { get; set; }
+
+    [Column(TypeName = "jsonb")]
+    public string DicomMeta { get; set; }
+    public long FileOffset { get; set; }
+    public long ChunkSize { get; set; }
     public virtual Series Series { get; set; }
 }

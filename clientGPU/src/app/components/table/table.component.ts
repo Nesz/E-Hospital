@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from "@angular/core";
-import { OrderDirection, Page } from "../../model/enums";
+import { Page, OrderDirection } from "../../model/interfaces";
 
 export interface Header<T> {
   name: string,

@@ -1,12 +1,5 @@
 <div class="areas" [class.areas__hidden]="!isHidden">
-  <div>
-    <div class="areas__header">Basic Information</div>
-    <div class="info" *ngFor="let entry of infoToDisplay;">
-      <span class="info__header">{{entry[0]}}</span>
-      <span class="info__desc">{{entry[1]()}}</span>
-    </div>
-  </div>
-  <div class="areas__header">Areas</div>
+  <div class="areas__header">Measurements</div>
   <div class="area"
     [class.measurement--active]="shape.isSelected"
     *ngFor="let shape of shapes; let i = index"
@@ -23,7 +16,7 @@
            [class.area--details__disabled]="!shape.detailsToggled">
         <div class="flex--column width100">
           <div class="area--position">
-            <span>orientation: {{shape.orientation}}</span>
+            <span>plane: {{shape.plane}}</span>
           </div>
           <div class="area--position">
             <span> slice: {{shape.slice}}</span>

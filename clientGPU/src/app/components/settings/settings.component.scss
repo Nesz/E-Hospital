@@ -1,0 +1,95 @@
+@import "../../../variables";
+
+.settings-section {
+  color: #fff;
+  font-family: Bahnschrift;
+  margin: 20px 15px 10px 15px;
+  padding-bottom: 20px;
+  border: 1px solid gray;
+  position: relative;
+
+  &--header {
+    padding-left: 4px;
+    padding-right: 4px;
+    position: absolute;
+    left: 10px;
+    top: -10px;
+    background: $color1;
+  }
+
+  &--content {
+    margin: 15px 10px 0;
+  }
+
+  &--setting {
+    margin-top: 15px;
+  }
+
+  .setting--dropdown {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    select {
+      color: #fff;
+      background: #44454d;
+      padding: 3px;
+      margin-left: 10px;
+      flex-grow: 1;
+    }
+    .icon {
+      margin-left: 10px;
+      background: #44454d;
+      border: 1px solid gray;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+  }
+
+  .setting--checkbox {
+    display: flex;
+    align-items: center;
+    input {
+      cursor: pointer;
+    }
+  }
+
+  .setting--slider {
+    /*display: flex;
+    flex-flow: row;*/
+
+    &__wrapper {
+      position: relative;
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+
+    input[type=range] {
+      width: 100%;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      background: red;
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
+
+    .min-max {
+      width: 100%;
+      display: flex;
+      font-size: 12px;
+      .min {
+        margin-left: 5px;
+        flex-grow: 1;
+      }
+    }
+
+  }
+
+  .cine--icon {
+    width: 24px;
+    height: 24px;
+  }
+}

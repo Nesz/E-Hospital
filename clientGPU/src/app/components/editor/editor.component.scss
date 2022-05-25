@@ -1,5 +1,90 @@
 @import "../../../variables";
 
+
+
+.modal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001;
+
+  height: 900px;
+  background: #1d2428;
+  color: #fff;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.sidebar {
+  max-height: calc(100vh - 44px);
+  max-width: 800px;
+  min-width: 800px;
+  background: $color1;
+  overflow-y: auto;
+  //max-width: 500px;
+  //overflow-y: scroll;
+
+  &::-webkit-scrollbar {
+    position: absolute;
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: $color4;
+  }
+}
+
+.bar {
+  max-width: 44px;
+  min-width: 44px;
+  background: $color1;
+  color: #fff;
+  font-family: Bahnschrift;
+  border-left: 2px solid #23292d;
+  .bar--options {
+    position: absolute;
+    transform: rotate(90deg);
+    transform-origin: left bottom;
+    display: flex;
+  }
+  .bar--option {
+    margin-left: 10px;
+    padding-left: 5px;
+    padding-right: 5px;
+    //border-right: 1px solid $color4;
+    line-height: 44px;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    &:hover {
+      background: #12a5a4;
+    }
+
+    &__active {
+      background: #12a5a4;
+    }
+
+    &__icon {
+      width: 20px;
+      height: 20px;
+      margin-right: 5px;
+      transform: rotate(-90deg);
+
+    }
+  }
+}
+
 .grid-selector {
   position: absolute;
   background: $color1;
@@ -13,7 +98,7 @@
   z-index: 99999;
 
   display: inline-grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
   grid-gap: 3px;
   grid-auto-flow: row;
 
@@ -21,12 +106,16 @@
   align-items: center;
 
   &-element {
-    border: 1px solid white;
+    //border: 1px solid white;
     width: 30px;
     height: 30px;
+    padding: 4px;
     transition: 0.25s;
 
     &-active {
+      background: #12a5a4;
+    }
+    &:hover {
       background: #12a5a4;
     }
   }
@@ -130,6 +219,7 @@
   height: 100%;
 
   &-grid {
+    position: relative;
     width: 100%;
     height: 100%;
     display: grid;

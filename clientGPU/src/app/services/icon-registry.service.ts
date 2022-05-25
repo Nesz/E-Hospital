@@ -4,6 +4,7 @@ import { of } from "rxjs";
 import { map } from "rxjs/operators";
 
 const ICONS = [
+  'reset',
   'eye_on',
   'eye_off',
   'delete',
@@ -32,17 +33,46 @@ const ICONS = [
   'double_right',
 ]
 
+export interface Tag {
+  vr: string,
+  name: string
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class IconRegistryService {
 
   private readonly registeredIcons: {[key: string]: string | undefined} = {};
+  private readonly tagDefinitions: {[key: string]: Tag | undefined} = {};
 
   constructor(private readonly http: HttpClient) {
     ICONS.map(name => {
       this.registeredIcons[name] = undefined;
     });
+  }
+
+  loadDefinitions = () => {
+    return this.http.get(`assets/attribs.csv`, { responseType: 'text' })
+      .pipe(map(data => {
+        const rows = data.split('\n');
+        rows.map(row => {
+          const split = row.split(';');
+          this.tagDefinitions[split[0] + split[1]] = {
+            vr: split[2],
+            name: split[3]
+          }
+        })
+        return data;
+      }));
+  }
+
+  getTagDefinition = (tagStr: string) => {
+    const tag = this.tagDefinitions[tagStr];
+    if (tag) {
+      return tag.name;
+    }
+    return 'unknown'
   }
 
   /*const icons = ICONS.map(path => {
