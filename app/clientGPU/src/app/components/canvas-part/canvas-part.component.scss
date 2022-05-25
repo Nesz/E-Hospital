@@ -1,0 +1,144 @@
+@import "../../../variables";
+
+:host {
+  position: relative;
+  display: contents;
+}
+.wrapper2d {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+
+.canvas-part {
+  position: relative;
+  border: 1px solid $color4;
+  border-radius: 5px;
+  box-sizing: border-box;
+  height: 100%;
+  z-index: 1;
+  display: flex;
+  flex-flow: column;
+
+  &--slider {
+    height: 100%;
+    padding: 5px;
+    position: absolute;
+    right: 0;
+    top: 0;
+
+    &__holder {
+      height: calc(100% - 20px);
+      margin-top: 5px;
+      position: relative;
+      width: 12px;
+
+      &> input {
+        width: calc(100vh - 100px);
+        height: 12px;
+        left: 12px;
+        padding: 0;
+        position: absolute;
+        top: 30px;
+        transform: rotate(90deg);
+        transform-origin: top left;
+        -webkit-appearance: none;
+        background-color: rgba(0, 0, 0, 0);
+      }
+    }
+  }
+
+  &__draw-area {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  &--header {
+    width: 100%;
+    height: 100%;
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+    background: #1d2428;
+
+    &__wrapper {
+      line-height: 40px;
+      display: flex;
+      width: 100%;
+      height: 40px;
+      color: white;
+      border-bottom: 1px solid $color4;
+    }
+
+    input, select, option {
+      outline: none;
+      background: black;
+      color: #fff;
+      border: 1px solid #12a5a4;
+      border-radius: 5px;
+    }
+
+    input {
+      width: 50px;
+    }
+
+    select {
+      height: 20px;
+    }
+  }
+}
+
+.setting {
+  margin-left: 10px;
+  span {
+    margin-right: 5px;
+  }
+  & > input {
+    width: 35px;
+  }
+}
+
+.debug {
+  position: absolute;
+  z-index: 1;
+  bottom: 0;
+  left: 10px;
+  &__text {
+    color: white;
+    font-size: 1.5rem;
+    text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+  }
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+
+.player {
+  display: flex;
+  justify-items: center;
+  align-items: center;
+  margin-left: 15px;
+  &--icon {
+    cursor: pointer;
+    width: 16px;
+    height: 16px
+  }
+  &--fps {
+    min-width: 50px;
+  }
+  input {
+    cursor: pointer;
+  }
+}

@@ -1,0 +1,107 @@
+@import "../../../variables";
+
+:host {
+  display: contents;
+}
+
+.content {
+  display: flex;
+  flex-flow: column;
+}
+
+.table {
+  color: $color-dark-text;
+  display: grid;
+  font-family: Bahnschrift, serif;
+
+  &--row {
+    display: contents;
+    div {
+      background: $color-dark-cell;
+    }
+    &:hover > div {
+      background-color: $color-dark-cell-hover;
+    }
+  }
+
+  &--headers {
+    display: contents;
+  }
+
+  &--header {
+    user-select: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+    text-align: center;
+    padding: 10px;
+    text-transform: uppercase;
+    font-weight: bold;
+    cursor: pointer;
+
+    &__sort {
+      margin-left: 3px;
+      width: 12px;
+      height: 12px;
+      svg {
+        width: 12px;
+        height: 12px;
+      }
+    }
+  }
+
+  &--data {
+    white-space: nowrap;
+    border-bottom: $color-dark-row-border-bottom;
+    color: $color-dark-text;
+    padding: 5px;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  &--footer {
+    padding-top: 10px;
+    display: flex;
+    grid-column-start: 1;
+    width: 100%;
+
+    select {
+      outline: none;
+      border: none;
+      border-bottom: $color-dark-row-border-bottom;
+      padding: 5px;
+      cursor: pointer;
+
+    }
+    option {
+      cursor: pointer;
+    }
+
+    button {
+      margin: 0;
+      padding: 0;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      background-color: inherit;
+      transition: 0.3s;
+      width: 22px;
+      height: 22px;
+
+      &[disabled] {
+        cursor: not-allowed;
+      }
+
+      &:hover {
+        //background-color: $bg;
+      }
+
+      app-icon svg {
+        width: 22px;
+        height: 22px;
+        fill: $color-dark-text;
+      }
+    }
+  }
+}
