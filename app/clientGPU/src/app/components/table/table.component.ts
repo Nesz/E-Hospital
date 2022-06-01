@@ -74,7 +74,6 @@ export class TableComponent<T> implements OnInit {
         }
       }
     }
-    console.log(this.sortedBy)
     this.requestPage(1)
   }
 }

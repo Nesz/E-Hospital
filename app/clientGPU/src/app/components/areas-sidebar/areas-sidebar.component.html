@@ -1,7 +1,7 @@
 <div class="areas" [class.areas__hidden]="!isHidden">
   <div class="areas__header">Measurements</div>
   <div class="area"
-    [class.measurement--active]="shape.isSelected"
+
     *ngFor="let shape of shapes; let i = index"
   >
     <div class="flex--column">

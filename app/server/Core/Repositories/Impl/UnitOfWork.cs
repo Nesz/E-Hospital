@@ -10,7 +10,7 @@ public class UnitOfWork : IUnitOfWork
     public IStudyRepository Studies { get; }
     public ISeriesRepository Series { get; }
     public IInstanceRepository Instances { get; set; }
-    public IAreaRepository Areas { get; set; }
+    public IMeasurementRepository Measurements { get; set; }
 
     public UnitOfWork(DataContext context)
     {
@@ -19,7 +19,7 @@ public class UnitOfWork : IUnitOfWork
         Studies = new StudyRepository(context);
         Series = new SeriesRepository(context);
         Instances = new InstanceRepository(context);
-        Areas = new AreaRepository(context);
+        Measurements = new MeasurementRepository(context);
     }
 
     public async Task CompleteAsync()

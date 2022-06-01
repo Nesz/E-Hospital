@@ -74,8 +74,6 @@ export class PatientComponent implements OnInit, AfterViewInit {
           orderDirection: OrderDirection.ASCENDING,
           data: [this.patient]
         }
-        console.log("this.patient")
-        console.log(this.patient)
       })
 
     this.auth.user.subscribe(user => {
@@ -116,8 +114,6 @@ export class PatientComponent implements OnInit, AfterViewInit {
         switch (event.type) {
           case HttpEventType.Response:
             this.signalR.listen(event.body.id).subscribe((data) => {
-              console.log("changed")
-              console.log(data)
               const progress = Math.round(100 * data?.currentProgress / data?.totalProgress);
               this.uploadProgress = progress;
               if (progress === 100) {
@@ -128,17 +124,14 @@ export class PatientComponent implements OnInit, AfterViewInit {
 
                 });
               }
-              console.log(`progress: ${progress} }`)
             })
 
             break;
           case HttpEventType.UploadProgress:
             this.total = event.total! + this.files.length
             this.current = event.loaded
-            console.log(`loaded: ${event.loaded} total: ${event.total}`)
             const progress = Math.round(100 * event.loaded / (event.total! + this.files.length));
             this.uploadProgress = progress;
-            console.log(`progress: ${progress} }`)
             break;
         }
       })

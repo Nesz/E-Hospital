@@ -13,10 +13,10 @@ public interface ISeriesService
 {
     Task<Page<SeriesDto>> GetSeriesPaged(long patientId, PageRequestDto request);
     Task<SeriesDto> GetSeriesByPatientAndSeriesId(long patientId, long seriesId);
-    Task<AreaDto> AddArea(long seriesId, AreaAddRequestDto request);
-    Task<IEnumerable<AreaDto>> GetAreas(long seriesId);
+    Task<MeasurementDto> AddMeasurement(long seriesId, MeasurementAddRequestDto request);
+    Task<IEnumerable<MeasurementDto>> GetMeasurements(long seriesId);
     Task RemoveArea(long seriesId, long areaId);
-    Task UpdateAreaLabel(long seriesId, long areaId, AreaUpdateLabelRequestDto request);
+    Task UpdateMeasurementLabel(long seriesId, long areaId, MeasurementUpdateLabelRequestDto request);
     Task<FileStreamResult> GetSeriesStream(long seriesId);
     Task<dynamic> GetInstanceMetaForSeries(long seriesId);
 }

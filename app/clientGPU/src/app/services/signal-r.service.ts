@@ -57,7 +57,6 @@ export class SignalRService {
   public getConnectionId = () => {
     this.hubConnection?.invoke('getconnectionid').then(
       (data) => {
-        console.log(data);
         this.connectionId = data;
       }
     );
@@ -66,8 +65,6 @@ export class SignalRService {
   public addListener = () => {
     this.hubConnection?.on('broadcastprogress', (data) => {
       const progress = data as Progress;
-      //console.log(progress)
-      //this.progress[progress.id] = progress;
       const src = {...this.progress.value};
       src[progress.id] = progress;
       this.progress.next(src);

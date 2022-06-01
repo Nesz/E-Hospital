@@ -4,14 +4,17 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Core.Entities;
 
-public class Area
+public class Measurement
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public long Id { get; set; }
     public Series Series { get; set; }
     public string Label { get; set; }
-    public char Orientation { get; set; }
+    public string Plane { get; set; }
+    public string Type { get; set; }
     public int Slice { get; set; }
-    public virtual IEnumerable<int> Vertices { get; set; }
+    
+    [Column(TypeName = "integer[]")]
+    public virtual int[] Vertices { get; set; }
 }

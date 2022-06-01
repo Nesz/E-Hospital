@@ -16,16 +16,23 @@ export interface HeaderSorted<T> extends Header<T> {
   efField: string
 }
 
-
+export interface MeasurementDto {
+  id: number,
+  label: string;
+  slice: number;
+  plane: string;
+  vertices: number[];
+  isVisible: boolean;
+  detailsToggled: boolean;
+  type: string;
+}
 export interface Measurement {
   id: number,
   label: string;
-  description: string;
   slice: number;
   plane: Plane;
   vertices: vec2[];
   isVisible: boolean;
-  isSelected: boolean;
   detailsToggled: boolean;
   type: MeasurementType;
 }

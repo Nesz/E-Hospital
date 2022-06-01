@@ -4,7 +4,7 @@
     <span class="settings-section--header">Histogram parameters</span>
     <div class="settings-section--content setting--input">
       <span>Buckets:</span>
-      <input [value]="buckets" (input)="onBucketChange($event)">
+      <input [min]="1" [value]="buckets" (input)="onBucketChange($event)">
     </div>
   </div>
 

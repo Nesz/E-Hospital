@@ -21,3 +21,4 @@ CanvasRenderingContext2D.prototype.arcVec = function(vec: vec2, a: number, b: nu
 CanvasRenderingContext2D.prototype.strokeRectVec = function(p1: vec2, p2: vec2): void {
   this.strokeRect(p1[0], p1[1], p2[0], p2[1]);
 }
+

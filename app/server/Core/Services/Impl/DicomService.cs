@@ -13,8 +13,6 @@ using Core.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi.Extensions;
-using MongoDB.Bson;
-using MongoDB.Driver.GridFS;
 using Parser;
 
 namespace Core.Services.Impl;
@@ -118,6 +116,7 @@ public class DicomService : IDicomService
             };
             await _unitOfWork.Series.Add(series);
         }
+        //CalculateStatisticsForEachPlaneInSeries(series);
 
         // override patient related tags
         dicom.GetEntryByTag(DicomConstats.PatientId).Value = patientId.ToString();
@@ -150,5 +149,67 @@ public class DicomService : IDicomService
 
         await _unitOfWork.CompleteAsync();
     }
-        
+
+    /*
+     * These statistics can take some time to calculate, so we do it just once
+     * so the client doesn't have to
+     */
+    private static void CalculateStatisticsForEachPlaneInSeries(Series series)
+    {
+        var instances = series.Instances;
+        var instance = instances[0];
+        // default plane
+        var filePath = instance.Series.FilePath;
+        var planeBytes = new byte[instance.ChunkSize];
+        using var reader = new BinaryReader(new FileStream(filePath, FileMode.Open));
+        reader.BaseStream.Seek(instance.FileOffset, SeekOrigin.Begin);
+        reader.Read(planeBytes, 0, (int)instance.ChunkSize);
+
+        var meta = instance.DicomMeta;
+        var dicom = JsonSerializer.Deserialize<Dicom>(meta, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = new LowercaseJsonNamingPolicy(),
+        });
+        var bpp = 16;
+        var pr = 1;
+        var intercept = -1024;
+        var slope = 1;
+        CalculateStatisticsForPlane(planeBytes, bpp, pr, intercept, slope);
+    }
+
+    private static void CalculateStatisticsForPlane(
+        byte[] bytes, 
+        int bpp, 
+        int pr,
+        int intercept,
+        int slope
+    )
+    {
+        if (bpp == 16 && pr == 1)
+        {
+            var arr = new short[(int)Math.Ceiling(bytes.Length / 2.0)];
+            Buffer.BlockCopy(bytes, 0, arr, 0, bytes.Length);
+            
+            var min = long.MaxValue;
+            var max = long.MinValue;
+            var sum = 0;
+            for (var i = 0; i < arr.Length; ++i)
+            {
+                var actualValue = arr[i] * slope + intercept;
+                sum += actualValue;
+                if (actualValue < min) min = actualValue;
+                if (actualValue > max) max = actualValue;
+            }
+
+            var avg = sum / arr.Length;
+            var stSum = 0D;
+            for (var i = 0; i < arr.Length; ++i)
+            {
+                var actualValue = arr[i] * slope + intercept;
+                stSum += Math.Pow(actualValue - avg, 2);
+            }
+            
+            var stDev = Math.Sqrt(stSum / arr.Length);
+        }
+    }
 }

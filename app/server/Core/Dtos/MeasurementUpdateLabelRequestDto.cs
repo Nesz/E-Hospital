@@ -1,6 +1,6 @@
 ﻿namespace Core.Dtos;
 
-public class AreaUpdateLabelRequestDto
+public class MeasurementUpdateLabelRequestDto
 {
     public string Label { get; set; }
 }

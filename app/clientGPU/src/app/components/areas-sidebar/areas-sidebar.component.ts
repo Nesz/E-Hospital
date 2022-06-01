@@ -38,7 +38,7 @@ export class AreasSidebarComponent implements OnInit {
   }
 
   delete(shape: Measurement) {
-    this.apiService.deleteArea(this.editor.seriesId, shape)
+    this.apiService.deleteMeasurement(this.editor.seriesId, shape)
       .pipe(tap(() => {
         const shapeToDelete = this.shapes.findIndex(s => s.id === shape.id);
         this.shapes.splice(shapeToDelete);

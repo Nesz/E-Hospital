@@ -66,24 +66,14 @@ export const generate3DTexture = (args: {
     args.bitsPerPixel
   );
 
-   const viewD = getView(args.buffer, viewType);
-
-  console.log(viewD)
-
+  const viewD = getView(args.buffer, viewType);
   const view = Float32Array.from(viewD);
-
-  for (let i = 0; i < viewD.length; i++) {
-    if (viewD[i] !== view[i]) {
-      console.log(`viewD[${i}] !== view[${i}] | ${viewD[i]} !== ${view[i]}`)
-    }
-  }
-
   const texture = gl.createTexture();
 
   gl.bindTexture(gl.TEXTURE_3D, texture);
 
-  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
@@ -256,21 +246,13 @@ function getTheoreticalMin(name: string) {
 
 export function fastMin(
   numbers: any,
-  { debug = false, no_data = undefined, theoretical_min = undefined } = {
-    debug: false,
+  { no_data = undefined, theoretical_min = undefined } = {
     no_data: undefined,
     theoretical_min: undefined,
   }
 ) {
-  if (debug)
-    console.log("[fast-min] starting with numbers:", numbers.slice(0, 10));
 
   if (!numbers.length) {
-    if (debug)
-      console.error(
-        "[fast-min] Instead of an array of numbers, you passed in",
-        numbers
-      );
     throw new Error("[fast-min] You didn't pass in an array of numbers");
   }
   if (numbers.length === 0)
@@ -279,13 +261,10 @@ export function fastMin(
   let min;
   const length = numbers.length;
 
-  if (debug) console.log("[fast-min] constructor:", numbers.constructor.name);
-
   if (theoretical_min === undefined)
     { // @ts-ignore
       theoretical_min = getTheoreticalMin(numbers.constructor.name);
     }
-  if (debug) console.log("[fast-min] theoretical minimunm is", theoretical_min);
   if (theoretical_min) {
     if (no_data !== undefined) {
       min = Infinity;
@@ -294,15 +273,6 @@ export function fastMin(
         if (value < min && value !== no_data) {
           min = value;
           if (value === theoretical_min) {
-            if (debug)
-              console.log(
-                "[fast-min] found minimum value of " +
-                value +
-                " at index " +
-                i +
-                " of " +
-                length
-              );
             break;
           }
         }
@@ -315,15 +285,6 @@ export function fastMin(
         if (value < min) {
           min = value;
           if (value === theoretical_min) {
-            if (debug)
-              console.log(
-                "[fast-min] found minimum value of " +
-                value +
-                " at index " +
-                i +
-                " of " +
-                length
-              );
             break;
           }
         }
@@ -349,10 +310,8 @@ export function fastMin(
       }
     }
   }
-
-  if (debug) console.log("[fast-min] returning", min);
   return min;
-};
+}
 
 function getTheoreticalMax(name: string) {
   switch (name) {
@@ -366,16 +325,13 @@ function getTheoreticalMax(name: string) {
 
 export function fastMax(
   numbers: any,
-  { debug = false, no_data = undefined, theoretical_max = undefined } = {
-    debug: false,
+  { no_data = undefined, theoretical_max = undefined } = {
     no_data: undefined,
     theoretical_max: undefined,
   }
 ) {
-  if (debug) console.log("[fast-max] starting with numbers:", numbers.slice(0, 10));
 
   if (!numbers.length) {
-    if (debug) console.error("[fast-max] Instead of an array of numbers, you passed in", numbers);
     throw new Error("[fast-max] You didn't pass in an array of numbers");
   }
   if (numbers.length === 0) throw new Error("[fast-max] You passed in an empty array");
@@ -383,13 +339,10 @@ export function fastMax(
   let max;
   const length = numbers.length;
 
-  if (debug) console.log("[fast-max] constructor:", numbers.constructor.name);
-
   if (theoretical_max === undefined) { // @ts-ignore
     theoretical_max = getTheoreticalMax(numbers.constructor.name);
   }
 
-  if (debug) console.log("[fast-max] theoretical maximunm is", theoretical_max);
   if (theoretical_max) {
     if (no_data !== undefined) {
       max = -Infinity;
@@ -399,7 +352,6 @@ export function fastMax(
           max = value;
           // @ts-ignore
           if (value >= theoretical_max) {
-            if (debug) console.log("[fast-max] found maximum value of " + value + " at index " + i + " of " + length);
             break;
           }
         }
@@ -413,7 +365,6 @@ export function fastMax(
           max = value;
           // @ts-ignore
           if (value >= theoretical_max) {
-            if (debug) console.log("[fast-max] found maximum value of " + value + " at index " + i + " of " + length);
             break;
           }
         }
@@ -440,6 +391,5 @@ export function fastMax(
     }
   }
 
-  if (debug) console.log("[fast-max] returning", max);
   return max;
-};
+}

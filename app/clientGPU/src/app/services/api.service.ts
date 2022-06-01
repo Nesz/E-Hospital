@@ -3,8 +3,18 @@ import { Dicom, request } from '../model/dicom';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpEvent, HttpRequest } from "@angular/common/http";
 import { map } from 'rxjs/operators';
-import { OrderDirection, Page, Role, Measurement, User } from "../model/interfaces";
+import {
+  OrderDirection,
+  Page,
+  Role,
+  Measurement,
+  User,
+  Plane,
+  MeasurementType,
+  MeasurementDto
+} from "../model/interfaces";
 import { Download, download } from "../model/download";
+import { vec2 } from "gl-matrix";
 
 export interface Series {
   id: number;
@@ -84,18 +94,20 @@ export class ApiService {
     );
   }
 
-  public addArea(seriesId: string, measurement: Measurement) {
-    return this.http.post<Measurement>(`https://localhost:5001/api/series/${seriesId}/area`, {
+  public addMeasurement(seriesId: string, measurement: Measurement) {
+    const payload = {
       label: measurement.label,
-      plane: measurement.plane,
+      plane: Plane[measurement.plane],
       slice: measurement.slice,
-      vertices: measurement.vertices.map(x => [x[0] | 0, x[1] | 0])
-    })
+      type: MeasurementType[measurement.type],
+      vertices: measurement.vertices.flatMap(x => [x[0] | 0, x[1] | 0])
+    };
+    return this.http.post<Measurement>(`https://localhost:5001/api/series/${seriesId}/measurement`, payload)
     .pipe(map(s => measurement.id = s.id))
   }
 
-  public deleteArea(seriesId: number, measurement: Measurement) {
-    return this.http.delete(`https://localhost:5001/api/series/${seriesId}/area/${measurement.id}`)
+  public deleteMeasurement(seriesId: number, measurement: Measurement) {
+    return this.http.delete(`https://localhost:5001/api/series/${seriesId}/measurement/${measurement.id}`)
   }
 
   public updateAreaLabel(seriesId: number, measurement: Measurement) {
@@ -104,8 +116,27 @@ export class ApiService {
     })
   }
 
-  public getAreas(seriesId: string) {
-    return this.http.get<Measurement[]>(`https://localhost:5001/api/series/${seriesId}/area`)
+  public getMeasurements(seriesId: string): Observable<Measurement[]> {
+    return this.http.get<MeasurementDto[]>(`https://localhost:5001/api/series/${seriesId}/measurement`)
+      .pipe(map(m => m.map(x => {
+          return {
+           ...x,
+           plane: Plane[x.plane as keyof typeof Plane],
+           type: MeasurementType[x.type as keyof typeof MeasurementType],
+           isVisible: true,
+           detailsToggled: false,
+           vertices: this.pointsToVec2(x.vertices)
+         }
+        })
+      ))
+  }
+
+  private pointsToVec2(arr: number[]) {
+    let out = [];
+    for (let i = 0; i < arr.length; i += 2) {
+      out.push(vec2.fromValues(arr[i], arr[i + 1]))
+    }
+    return out;
   }
 
   public getPatientsList(args: {
@@ -116,7 +147,6 @@ export class ApiService {
     keyFilter: string,
     roleFilter: Role
   }) {
-    console.log(args)
     return this.http.get<Page<User>>('https://localhost:5001/api/user', {
       params: args
     });

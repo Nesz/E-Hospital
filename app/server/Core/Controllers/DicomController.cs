@@ -10,6 +10,7 @@ namespace Core.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [DisableRequestSizeLimit]
+[RequestFormLimits(ValueCountLimit = 5000)]
 public class DicomController : ControllerBase
 {
 

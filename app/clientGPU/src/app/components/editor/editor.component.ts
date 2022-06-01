@@ -4,7 +4,7 @@ import {
   Component,
   ComponentFactoryResolver,
   ComponentRef,
-  ElementRef, forwardRef,
+  ElementRef,
   NgZone,
   OnDestroy,
   OnInit,
@@ -13,11 +13,11 @@ import {
 } from "@angular/core";
 import { ProgressRingComponent } from "../progress-ring/progress-ring.component";
 import {
-  fastMax, fastMin,
   generate3DTexture,
   getAngle,
   getAreaMM,
-  getDistanceMM, getMinMax,
+  getDistanceMM,
+  getMinMax,
   isInsideBoundsBBox,
   loadLUT
 } from "../../helpers/canvas.helper";
@@ -56,10 +56,9 @@ import { DistanceTool } from "../../model/impl/distance.tool";
 import { AngleTool } from "../../model/impl/angle.tool";
 import { TableData } from "../nestable-table/nestable-table.component";
 import { IconRegistryService } from "../../services/icon-registry.service";
-import { layouts } from "../../dicom.constants";
-import { Settings } from "../settings/settings.component";
 import { HistogramComponent } from "../histogram/histogram.component";
 import { FpsLoop } from "../../helpers/fps-loop";
+import { GPU, Kernel } from "gpu.js";
 
 @Component({
   selector: 'app-editor',
@@ -177,9 +176,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
   public onShapeFinish(shape: Measurement) {
     const routeParams = this.route.snapshot.paramMap;
-    this.api.addArea(routeParams.get('seriesId')!, shape).subscribe(x => {
-      console.log(x)
-    })
+    this.api.addMeasurement(routeParams.get('seriesId')!, shape).subscribe()
   }
 
   public fpsChanged($event: Event) {
@@ -199,8 +196,35 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     this.canvases.forEach(x => x.destroy())
     this.subs.unsubscribe();
   }
-
+  public ksum!: Kernel;
   public ngOnInit() {
+    const gpu = new GPU({mode: 'webgl2'});
+    this.ksum = gpu.createKernel(function (texture: Float32Array, length: number) {
+      let sum = 0;
+      let min = 0;
+      let max = -2048;
+      let j = 0;
+
+      for (let i = 0; i < length; i++) {
+        j ++;
+        sum += texture[i];
+        if (texture[i] < min) min = texture[i];
+        if (texture[i] > max) max = texture[i];
+      }
+
+      // const avg = sum / length;
+      //
+      // let variance = 0;
+      // for (let j = 0; j < length; j++) {
+      //   variance += (Math.pow(texture[this.thread.x] - avg, 2)) / length;
+      // }
+      //
+      // const stDev = Math.sqrt(variance);
+
+      return [sum, min, max, j];
+    }).setOutput([1])
+      .setLoopMaxIterations(1000000000);
+
     const routeParams = this.route.snapshot.paramMap;
     this.seriesId = Number(routeParams.get('seriesId')!);
     const args = {
@@ -212,7 +236,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     forkJoin([
       this.api.getInstanceMetaForSeries(args.seriesId),
       this.api.getSeriesMetadata(args),
-      this.api.getAreas(args.seriesId),
+      this.api.getMeasurements(args.seriesId),
       this.download$.pipe(map(x => this.download = x)),
     ])
     .pipe(tap(() => this.progressIndicator.label = 'Generating textures'))
@@ -232,9 +256,6 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
       this.setupContext();
       this.initBuffers();
-
-      console.log(dicom)
-      console.log(dicom.asNumber(Tag.PIXEL_SPACING))
 
       const texture = generate3DTexture({
         gl: this.context,
@@ -328,7 +349,6 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
           this.currentCanvas = canvasPart.instance;
           this.canvases.forEach(ref => ref.location.nativeElement.children[0].style.border = '1px solid #12a5a4')
           canvasPart.location.nativeElement.children[0].style.border = '1px solid red'
-          console.log(this.currentCanvas.plane)
         }
         this.tool.onMouseDown(event)
       }))
@@ -390,11 +410,22 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     }
   }
 
-  public readCurrentSlicePixels() {
-    const gl = this.context;
-    const canvasPart = this.currentCanvas;
+  public readCurrentSlicePixelsForPlane() {
+    return this.readCurrentSlicePixels({
+      plane: this.currentCanvas.plane,
+      currentSlice: this.currentCanvas.currentSlice,
+      isInverted: this.currentCanvas.isInverted,
+    })
+  }
 
-    const { width, height } = this.getDimensionsForPlane(canvasPart.plane);
+  public readCurrentSlicePixels(args: {
+    plane: Plane,
+    currentSlice: number,
+    isInverted: boolean
+  }) {
+    const gl = this.context;
+
+    const { width, height } = this.getDimensionsForPlane(args.plane);
     const shader = this.programs['histogram'];
 
     gl.disable(gl.SCISSOR_TEST)
@@ -424,11 +455,11 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     const uniforms = {
       u_slope: this.props.slope,
       u_intercept: this.props.intercept,
-      u_plane: this.oti(canvasPart.plane),
-      u_currentSlice: canvasPart.currentSlice,
-      u_maxSlice: this.slicesCountForPlane(canvasPart.plane),
+      u_plane: this.oti(args.plane),
+      u_currentSlice: args.currentSlice,
+      u_maxSlice: this.slicesCountForPlane(args.plane),
       u_image: 1,
-      u_inverted: canvasPart.isInverted
+      u_inverted: args.isInverted
     };
 
     shader.assignUniforms(gl, uniforms);
@@ -493,7 +524,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
       u_maxSlice: this.slicesCountForPlane(canvasPart.plane),
       u_image: 0,
       u_lut: 1,
-      u_inverted: canvasPart.isInverted
+      u_inverted: canvasPart.isInverted,
     };
 
     shader.assignUniforms(gl, uniforms);
@@ -730,9 +761,15 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         ww: Number(ww),
       };
     } else {
+      const pixels = this.readCurrentSlicePixels({
+        plane: Plane.TRANSVERSE,
+        currentSlice: 0,
+        isInverted: false
+      });
+      const { min, max } = getMinMax(pixels);
       return {
-        wc: 0,
-        ww: 0,
+        ww: Math.round(max - min),
+        wc: Math.round((max + min) / 2)
       }
     }
   };

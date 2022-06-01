@@ -40,28 +40,28 @@ public class SeriesController
         return await _seriesService.GetInstanceMetaForSeries(seriesId);
     }
         
-    [HttpPost("{seriesId:long}/area")]
-    public async Task<AreaDto> AddArea([FromRoute] long seriesId, [FromBody] AreaAddRequestDto request)
+    [HttpPost("{seriesId:long}/measurement")]
+    public async Task<MeasurementDto> AddMeasurement([FromRoute] long seriesId, [FromBody] MeasurementAddRequestDto request)
     {
-        return await _seriesService.AddArea(seriesId, request);
+        return await _seriesService.AddMeasurement(seriesId, request);
     }
         
-    [HttpDelete("{seriesId:long}/area/{areaId:long}")]
-    public async Task RemoveArea([FromRoute] long seriesId, [FromRoute] long areaId)
+    [HttpDelete("{seriesId:long}/measurement/{measurementId:long}")]
+    public async Task RemoveMeasurement([FromRoute] long seriesId, [FromRoute] long measurementId)
     {
-        await _seriesService.RemoveArea(seriesId, areaId);
+        await _seriesService.RemoveArea(seriesId, measurementId);
     }
     
-    [HttpPatch("{seriesId:long}/area/{areaId:long}")]
-    public async Task UpdateAreaLabel([FromRoute] long seriesId, [FromRoute] long areaId, [FromBody] AreaUpdateLabelRequestDto request)
+    [HttpPatch("{seriesId:long}/measurement/{measurementId:long}")]
+    public async Task UpdateMeasurementLabel([FromRoute] long seriesId, [FromRoute] long measurementId, [FromBody] MeasurementUpdateLabelRequestDto request)
     {
-        await _seriesService.UpdateAreaLabel(seriesId, areaId, request);
+        await _seriesService.UpdateMeasurementLabel(seriesId, measurementId, request);
     }
     
-    [HttpGet("{seriesId:long}/area")]
-    public async Task<IEnumerable<AreaDto>> GetAreas([FromRoute] long seriesId)
+    [HttpGet("{seriesId:long}/measurement")]
+    public async Task<IEnumerable<MeasurementDto>> GetMeasurements([FromRoute] long seriesId)
     {
-        return await _seriesService.GetAreas(seriesId);
+        return await _seriesService.GetMeasurements(seriesId);
     }
     
     [HttpGet("{seriesId:long}/stream")]

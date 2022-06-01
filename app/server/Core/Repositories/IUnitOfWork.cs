@@ -9,7 +9,7 @@ public interface IUnitOfWork
     IStudyRepository Studies { get; }
     ISeriesRepository Series { get; }
     IInstanceRepository Instances { get; }
-    IAreaRepository Areas { get; }
+    IMeasurementRepository Measurements { get; }
         
     Task CompleteAsync();
 }

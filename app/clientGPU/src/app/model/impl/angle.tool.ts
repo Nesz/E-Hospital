@@ -21,6 +21,7 @@ export class AngleTool extends Tool {
         this.isDrawing = false;
         if (this.isValid(this.editor.props.width, this.editor.props.height)) {
           this.editor.shapes.push(this.measurement);
+          this.editor.onShapeFinish(this.measurement);
         } else {
           this.editor.renderMeasurements(this.canvasPart);
         }
@@ -40,11 +41,9 @@ export class AngleTool extends Tool {
       this.measurement = {
         id: -1,
         label: "label",
-        description: "description",
         vertices: [real, real],
         slice: this.canvasPart.currentSlice,
         plane: this.canvasPart.plane,
-        isSelected: false,
         isVisible: true,
         detailsToggled: false,
         type: MeasurementType.ANGLE

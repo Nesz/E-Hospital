@@ -11,10 +11,10 @@ public class MappingProfile : Profile
     {
         CreateMap<User, UserDto>();
 
-        CreateMap<Area, AreaDto>();
         CreateMap<Study, StudyDto>();
         CreateMap<Series, SeriesDto>();
         CreateMap<Instance, InstanceDto>();
+        CreateMap<Measurement, MeasurementDto>();
 
         CreateMap(typeof(Page<>), typeof(Page<>));
     }

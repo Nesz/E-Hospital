@@ -35,7 +35,6 @@ export class ShaderService {
         const program = this.createProgram(gl, vertShader, fragShader);
 
         const response = [program, this.getUniforms(gl, program)];
-        console.log(response)
         return response as [WebGLProgram, Uniforms];
       })
     );

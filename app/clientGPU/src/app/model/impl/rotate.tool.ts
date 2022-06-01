@@ -30,7 +30,6 @@ export class RotateTool extends Tool {
       event.preventDefault();
       const delta =
         (event.clientX - this._startPoint[0] - (event.clientY - this._startPoint[1])) / 100;
-      console.log(delta)
       this._startPoint = vec2.fromValues(event.clientX, event.clientY);
 
       if (this.canvasPart.camera.rotation + delta > Math.PI * 2 || this.canvasPart.camera.rotation + delta < 0) {

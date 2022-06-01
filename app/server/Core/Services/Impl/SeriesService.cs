@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using AutoMapper;
-using AutoMapper.Internal;
 using Core.Dtos;
 using Core.Entities;
-using Core.Helpers;
 using Core.Models;
 using Core.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 
 namespace Core.Services.Impl;
 
@@ -52,39 +47,40 @@ public class SeriesService : ISeriesService
         return instance.DicomMeta;
     }
 
-    public async Task<AreaDto> AddArea(long seriesId, AreaAddRequestDto request)
+    public async Task<MeasurementDto> AddMeasurement(long seriesId, MeasurementAddRequestDto request)
     {
         var series = await _unitOfWork.Series.GetById(seriesId);
-        var area = new Area
+        var area = new Measurement
         {
             Series = series,
             Label = request.Label,
-            Orientation = request.Orientation,
+            Plane = request.Plane,
+            Type = request.Type,
             Slice = request.Slice,
             Vertices = request.Vertices
         };
-        await _unitOfWork.Areas.Add(area);
+        await _unitOfWork.Measurements.Add(area);
         await _unitOfWork.CompleteAsync();
-        return _mapper.Map<AreaDto>(area);
+        return _mapper.Map<MeasurementDto>(area);
     }
 
-    public async Task UpdateAreaLabel(long seriesId, long areaId, AreaUpdateLabelRequestDto request)
+    public async Task UpdateMeasurementLabel(long seriesId, long areaId, MeasurementUpdateLabelRequestDto request)
     {
-        var area = await _unitOfWork.Areas.GetAreaById(areaId);
+        var area = await _unitOfWork.Measurements.GetMeasurementById(areaId);
         area.Label = request.Label;
         await _unitOfWork.CompleteAsync();
     }
 
     public async Task RemoveArea(long seriesId, long areaId)
     {
-        _unitOfWork.Areas.RemoveById(areaId);
+       _unitOfWork.Measurements.RemoveById(areaId);
        await _unitOfWork.CompleteAsync();
     }
 
-    public async Task<IEnumerable<AreaDto>> GetAreas(long seriesId)
+    public async Task<IEnumerable<MeasurementDto>> GetMeasurements(long seriesId)
     {
-        var areas = await _unitOfWork.Areas.GetAreasBySeriesId(seriesId);
-        return _mapper.Map<IList<AreaDto>>(areas);
+        var areas = await _unitOfWork.Measurements.GetMeasurementsBySeriesId(seriesId);
+        return _mapper.Map<IList<MeasurementDto>>(areas);
     }
 
     public async Task<FileStreamResult> GetSeriesStream(long seriesId)

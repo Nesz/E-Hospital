@@ -98,7 +98,6 @@ export class LoginComponent implements OnInit {
     const errors = form.controls[formKey].errors;
     if (!errors) return false;
     for (const [key, value] of Object.entries(errors)) {
-      console.log(`${key}: ${value}`);
       if (value === true) return true;
     }
     return false;

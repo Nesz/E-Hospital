@@ -23,7 +23,6 @@ const initializer = (auth: AuthenticationService, signalR: SignalRService): (() 
       .me()
       .toPromise()
       .then((result) => {
-        console.log(result)
         return signalR.startConnection();
       })
       .catch((error) => console.log(error))

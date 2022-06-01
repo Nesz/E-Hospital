@@ -10,13 +10,14 @@ import {
 } from "@angular/core";
 import { getMinMax } from "../../helpers/canvas.helper";
 import { EditorComponent } from "../editor/editor.component";
+import { GPU } from "gpu.js";
 
 @Component({
   selector: 'app-histogram',
   templateUrl: './histogram.component.html',
   styleUrls: ['./histogram.component.scss']
 })
-export class HistogramComponent implements AfterViewInit, OnChanges {
+export class HistogramComponent implements AfterViewInit {
   @ViewChild('histogram') canvas!: ElementRef<HTMLCanvasElement>;
   private context!: CanvasRenderingContext2D;
   public buckets: number = 64;
@@ -28,10 +29,6 @@ export class HistogramComponent implements AfterViewInit, OnChanges {
     this.drawHistogram();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    this.drawHistogram();
-  }
-
   public onBucketChange($event: Event) {
     this.buckets = Number(($event.target as HTMLInputElement).value);
     this.drawHistogram();
@@ -39,6 +36,7 @@ export class HistogramComponent implements AfterViewInit, OnChanges {
 
   public plotBuckets(pixels: Float32Array, buckets: number) {
     const { min, max } = getMinMax(pixels);
+    console.log(min, max)
     const bucketSize  = (max - min) / buckets;
     const bucketsList = new Array(buckets).fill(0)
 
@@ -56,8 +54,9 @@ export class HistogramComponent implements AfterViewInit, OnChanges {
     };
   }
 
+
   public drawHistogram() {
-    const data = this.plotBuckets(this.editor.readCurrentSlicePixels(), this.buckets);
+    const data = this.plotBuckets(this.editor.readCurrentSlicePixelsForPlane(), this.buckets);
 
     const ctx = this.context;
 
@@ -118,7 +117,7 @@ export class HistogramComponent implements AfterViewInit, OnChanges {
     // const bucketWidth = desiredHistogramWidth / (data.buckets.length - 1)
     // const bucketWidth = Math.ceil(desiredHistogramWidth / (data.buckets.length - 1))
 
-    const bucketWidth = Math.round(desiredHistogramWidth / (data.buckets.length - 1) * 100) / 100
+    const bucketWidth = desiredHistogramWidth / (data.buckets.length - 1)
     let histogramWidth = bucketWidth * (data.buckets.length - 1) + bucketWidth;
 
 
@@ -130,8 +129,8 @@ export class HistogramComponent implements AfterViewInit, OnChanges {
     for (let i = 0; i < data.buckets.length - 1; ++i) {
       ctx.fillStyle = `rgb(${colors[i][0]}, ${colors[i][1]}, ${colors[i][2]})`;
       const x = histogramXOffset + i * bucketWidth;
-      ctx.fillRect(x, histogramHeight, bucketWidth, -data.buckets[i] * heightPixelRatio);
-      ctx.fillRect(x, histogramHeight + 20, bucketWidth, 20);
+      ctx.fillRect(x, histogramHeight, bucketWidth + 0.5, -data.buckets[i] * heightPixelRatio);
+      ctx.fillRect(x, histogramHeight + 20, bucketWidth + 0.5, 20);
       if (x >= lastLabel + minSpacing) {
         ctx.font = 'bold 12px Arial';
         ctx.fillStyle = '#000';

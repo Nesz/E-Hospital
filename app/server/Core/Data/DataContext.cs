@@ -18,16 +18,16 @@ public class DataContext : DbContext
     public DbSet<Study> Studies { get; set; }
     public DbSet<Series> Series { get; set; }
     public DbSet<Instance> Instances { get; set; }
-    public DbSet<Area> Areas { get; set; }
+    public DbSet<Measurement> Measurements { get; set; }
         
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        var intValueConverter = new IntListToJsonValueConverter();
+        // var intValueConverter = new IntListToJsonValueConverter();
 
-        modelBuilder
-            .Entity<Area>()
-            .Property(e => e.Vertices)
-            .HasConversion(intValueConverter);
+        // modelBuilder
+        //     .Entity<Measurement>()
+        //     .Property(e => e.Vertices)
+        //     .HasConversion(intValueConverter);
 
     }
 }

@@ -18,5 +18,5 @@ public class Series
     public string FilePath { get; set; }
     public virtual Study Study { get; set; }
     public virtual List<Instance> Instances { get; set; }
-    public virtual List<Area> Areas { get; set; }
+    public virtual List<Measurement> Measurements { get; set; }
 }
